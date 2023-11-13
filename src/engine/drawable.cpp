@@ -5,16 +5,17 @@
 #include "renderer.hpp"
 
 Drawable::Drawable() :
+_x(0),
+_y(0),
 _drawablePoints(),
 _drawableLines(),
 _drawableRectangles()
 {
-    SDL_Log("<Draw constructor>");
     Renderer::addDraw(this);
 }
 
 Drawable::~Drawable() {
-    SDL_Log("<Draw destructor>");
+    
 }
 
 void Drawable::setPosition(const int p_x, const int p_y) {
@@ -33,7 +34,7 @@ void Drawable::addPoint(const int p_x, const int p_y, const Color p_color) {
 }
 
 void Drawable::addLine(const int p_x1, const int p_y1, const int p_x2, const int p_y2, const Color p_color) {
-    _drawableLines.emplace_back(Line(p_x1, p_x2, p_y1, p_y2, p_color));
+    _drawableLines.emplace_back(Line(p_x1, p_y1, p_x2, p_y2, p_color));
 }
 
 void Drawable::addRectangle(const int p_x, const int p_y, const int p_w, const int p_h, const Color p_outColor, const Color p_inColor) {

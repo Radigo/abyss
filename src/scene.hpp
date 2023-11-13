@@ -1,11 +1,12 @@
 #pragma once
 
-#include "engine/drawable.hpp"
+#include "ui/closebutton.hpp"
+#include "ui/window.hpp"
 
 class Scene {
     private:
-        Drawable* _draw1;
-        Drawable* _draw2;
+        Window* _window;
+        CloseButton* _closeButton;
 
     public:
         bool init();

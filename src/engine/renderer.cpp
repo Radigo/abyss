@@ -26,6 +26,8 @@ bool Renderer::init(SDL_Window* p_window) {
         SDL_Log("Texture render available");
     }
 
+    SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
+
     return true;
 }
 
@@ -34,7 +36,7 @@ void Renderer::addDraw(Drawable* p_drawable) {
 }
 
 void Renderer::update() {
-    SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 0);
     SDL_RenderClear(_renderer);
     
     // Draw all drawables
@@ -49,11 +51,15 @@ void Renderer::update() {
 
         for (Drawable::Line line : drawable->getDrawableLines()) {
             SDL_SetRenderDrawColor(_renderer, line.color.r, line.color.g, line.color.b, line.color.a);
-            SDL_RenderDrawLine(_renderer, drawableX + line.x1, drawableX + line.x2, drawableY + line.y1, drawableY + line.y2);
+            SDL_RenderDrawLine(_renderer, drawableX + line.x1, drawableY + line.y1, drawableX + line.x2, drawableY + line.y2);
         }
 
         for (Drawable::Rectangle rect : drawable->getDrawableRectangles()) {
             SDL_Rect sdlRect = {drawableX + rect.x, drawableY + rect.y, rect.w, rect.h};
+
+            SDL_SetRenderDrawColor(_renderer, rect.inColor.r, rect.inColor.g, rect.inColor.b, rect.inColor.a);
+            SDL_RenderFillRect(_renderer, &sdlRect);
+
             SDL_SetRenderDrawColor(_renderer, rect.outColor.r, rect.outColor.g, rect.outColor.b, rect.outColor.a);
             SDL_RenderDrawRect(_renderer, &sdlRect);
         }
