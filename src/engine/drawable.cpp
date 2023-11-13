@@ -1,7 +1,5 @@
 #include "drawable.hpp"
 
-#include <SDL2/SDL_log.h>
-
 #include "renderer.hpp"
 
 Drawable::Drawable() :

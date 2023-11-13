@@ -1,5 +1,6 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <iostream>
 #include <sstream>
@@ -110,6 +111,11 @@ int main(int /*argc*/, char** /*argv[]*/)
         std::cerr << "[ERROR] Failed to create the renderer" << std::endl;
         return -1;
     }
+
+    //Initialisation de SDL_TTF 
+	if (TTF_Init() == -1) { 
+		return false; 
+	} 
 
     // Create Scene
     Scene scene;
