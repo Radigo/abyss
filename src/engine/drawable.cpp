@@ -5,9 +5,9 @@
 #include "renderer.hpp"
 
 Drawable::Drawable() :
-_drawablePoints({}),
-_drawableLines({}),
-_drawableRectangles({})
+_drawablePoints(),
+_drawableLines(),
+_drawableRectangles()
 {
     SDL_Log("<Draw constructor>");
     Renderer::addDraw(this);

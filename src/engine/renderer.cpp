@@ -3,7 +3,7 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_log.h>
 
-vector<Drawable*> Renderer::_drawList = {};
+vector<Drawable*> Renderer::_drawList = vector<Drawable*>();
 
 bool Renderer::init(SDL_Window* p_window) {
     _renderer = SDL_CreateRenderer(p_window, -1, SDL_RENDERER_ACCELERATED);
