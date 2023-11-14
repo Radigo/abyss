@@ -114,7 +114,7 @@ int main(int /*argc*/, char** /*argv[]*/)
 
     //Initialisation de SDL_TTF 
 	if (TTF_Init() == -1) { 
-		return false; 
+		return -1; 
 	} 
 
     // Create Scene

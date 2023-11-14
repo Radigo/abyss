@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Abyss build launch",
+            "name": "Win build launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/abyss.exe",
@@ -29,6 +29,19 @@
                 }
             ],
             "preLaunchTask": "Win build"
+        },
+        {
+            "name": "Mac build launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/abyss",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "preLaunchTask": "Mac build"
         }
     ]
 }
