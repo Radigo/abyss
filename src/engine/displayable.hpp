@@ -59,20 +59,24 @@ class Displayable {
             }
         };
 
-    private:
-        int _x;
-        int _y;
+        static std::vector<Displayable*> displayList;
 
     protected:
         vector<Point> _drawablePoints;
         vector<Line> _drawableLines;
         vector<Rectangle> _drawableRectangles;
+
+    private:
+        int _x;
+        int _y;
+        Displayable* _parent;
         
     public:
         Displayable();
         ~Displayable();
 
         void setPosition(const int p_x, const int p_y);
+        void setParent(Displayable* p_displayable);
 
         // Draw
         void clear();
@@ -81,8 +85,19 @@ class Displayable {
         void addRectangle(const int p_x, const int p_y, const int p_w, const int p_h, const Color p_outColor = Color(255, 255, 255, 255), const Color p_inColor = Color(0, 0, 0, 0));
 
         // Getters
-        inline int getX() { return _x; };
-        inline int getY() { return _y; };
+        inline int getX() {
+            if (_parent != nullptr)
+                return _x + _parent->getX();
+            return _x;
+        };
+        inline int getY() {
+            if (_parent != nullptr)
+                return _y + _parent->getY();
+            return _y;
+        };
+        inline Displayable* getParent() {
+            return _parent;
+        }
         // Draw
         inline vector<Point> getDrawablePoints() { return _drawablePoints; }
         inline vector<Line> getDrawableLines() { return _drawableLines; }

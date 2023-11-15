@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "engine/input.hpp"
 #include "engine/renderer.hpp"
 #include "scene.hpp"
 
@@ -112,6 +113,9 @@ int main(int /*argc*/, char** /*argv[]*/)
         return -1;
     }
 
+    // Create input controller
+    Input input;
+
     //Initialisation de SDL_TTF 
 	if (TTF_Init() == -1) { 
 		return -1; 
@@ -124,7 +128,7 @@ int main(int /*argc*/, char** /*argv[]*/)
         return -1;
     }
 
-    // --- rendering loop
+    // --- main loop
     bool loop = true;
     while (loop)
     {
@@ -160,6 +164,18 @@ int main(int /*argc*/, char** /*argv[]*/)
                         loop = false;
                         break;
                     }
+                    break;
+                case SDL_MOUSEMOTION:
+                    input.onMouseMove(event.motion);
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                    input.onMouseButtonDown(event.button);
+                    break;
+                case SDL_MOUSEBUTTONUP:
+                    input.onMouseButtonUp(event.button);
+                    break;
+                case SDL_MOUSEWHEEL:
+                    input.onMouseWheel(event.wheel);
                     break;
             }
         }

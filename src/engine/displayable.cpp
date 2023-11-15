@@ -2,20 +2,17 @@
 
 #include "engine/renderer.hpp"
 
+std::vector<Displayable*> Displayable::displayList;
+
 Displayable::Displayable() :
-_x(0),
-_y(0),
 _drawablePoints(),
 _drawableLines(),
-_drawableRectangles()
+_drawableRectangles(),
+_x(0),
+_y(0),
+_parent()
 {
-    Renderer::add(this);
-    /*
-    OK, let's get rid of renderer in here.
-    Try this:
-    keep a static list of displayables in displayable
-    Let renderer get access to this list when it updates
-    */
+    Displayable::displayList.emplace_back(this);
 }
 
 Displayable::~Displayable() {
@@ -25,6 +22,10 @@ Displayable::~Displayable() {
 void Displayable::setPosition(const int p_x, const int p_y) {
     _x = p_x;
     _y = p_y;
+}
+
+void Displayable::setParent(Displayable* p_displayable) {
+    _parent = p_displayable;
 }
 
 void Displayable::clear() {

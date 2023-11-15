@@ -10,8 +10,6 @@
 #include "engine/displayable.hpp"
 
 SDL_Renderer* Renderer::_renderer = nullptr;
-std::vector<Displayable*> Renderer::_displayList = std::vector<Displayable*>();
-std::vector<SDL_Texture*> Renderer::_textures;
 
 bool Renderer::init(SDL_Window* p_window) {
     _renderer = SDL_CreateRenderer(p_window, -1, SDL_RENDERER_ACCELERATED);
@@ -39,16 +37,12 @@ bool Renderer::init(SDL_Window* p_window) {
     return true;
 }
 
-void Renderer::add(Displayable* p_displayable) {
-    _displayList.emplace_back(p_displayable);
-}
-
 void Renderer::update() {
     SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 0);
     SDL_RenderClear(_renderer);
     
     // Draw all displayables
-    for (Displayable* displayable : _displayList) {
+    for (Displayable* displayable : Displayable::displayList) {
         int drawableX = displayable->getX();
         int drawableY = displayable->getY();
 
@@ -71,10 +65,11 @@ void Renderer::update() {
             SDL_SetRenderDrawColor(_renderer, rect.outColor.r, rect.outColor.g, rect.outColor.b, rect.outColor.a);
             SDL_RenderDrawRect(_renderer, &sdlRect);
         }
-
+/*
         for (SDL_Texture* texture : _textures) {
             SDL_RenderCopy(_renderer, texture, NULL, NULL);
         }
+*/
     }
 
     SDL_RenderPresent(_renderer);
@@ -104,5 +99,5 @@ void Renderer::_addText(const std::string &message, const std::string &fontFile,
 	SDL_FreeSurface(surf);
 	TTF_CloseFont(font);
 
-    _textures.emplace_back(texture);
+    //_textures.emplace_back(texture);
 }
