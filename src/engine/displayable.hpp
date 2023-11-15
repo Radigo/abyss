@@ -4,7 +4,7 @@
 
 using namespace std;
 
-class Drawable {
+class Displayable {
     public:
         struct Color {
             int r;
@@ -63,25 +63,28 @@ class Drawable {
         int _x;
         int _y;
 
+    protected:
         vector<Point> _drawablePoints;
         vector<Line> _drawableLines;
         vector<Rectangle> _drawableRectangles;
-
+        
     public:
-        Drawable();
-        ~Drawable();
+        Displayable();
+        ~Displayable();
 
-        virtual void setPosition(const int p_x, const int p_y);
+        void setPosition(const int p_x, const int p_y);
 
-        inline int getX() { return _x; }
-        inline int getY() { return _y; }
-        inline vector<Point> getDrawablePoints() { return _drawablePoints; }
-        inline vector<Line> getDrawableLines() { return _drawableLines; }
-        inline vector<Rectangle> getDrawableRectangles() { return _drawableRectangles; }
-
-    protected:
+        // Draw
         void clear();
         void addPoint(const int p_x, const int p_y, const Color p_color = Color(255, 255, 255, 255));
         void addLine(const int p_x1, const int p_y1, const int p_x2, const int p_y2, const Color p_color = Color(255, 255, 255, 255));
         void addRectangle(const int p_x, const int p_y, const int p_w, const int p_h, const Color p_outColor = Color(255, 255, 255, 255), const Color p_inColor = Color(0, 0, 0, 0));
+
+        // Getters
+        inline int getX() { return _x; };
+        inline int getY() { return _y; };
+        // Draw
+        inline vector<Point> getDrawablePoints() { return _drawablePoints; }
+        inline vector<Line> getDrawableLines() { return _drawableLines; }
+        inline vector<Rectangle> getDrawableRectangles() { return _drawableRectangles; }
 };

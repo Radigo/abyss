@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../engine/drawable.hpp"
+#include "engine/displayable.hpp"
 
-class Window : public Drawable {
+class Window : public Displayable {
     public:
         Window(const int p_width, const int p_height);
         ~Window();

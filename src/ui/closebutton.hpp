@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../engine/drawable.hpp"
+#include "engine/displayable.hpp"
 
-class CloseButton : public Drawable {
+class CloseButton : public Displayable {
     static constexpr int CLOSE_BUTTON_SIZE = 20;
     public:
         CloseButton();

@@ -46,6 +46,7 @@
                 "${workspaceFolder}/src/*.cpp",
                 "${workspaceFolder}/src/engine/*.cpp",
                 "${workspaceFolder}/src/ui/*.cpp",
+                "-I${workspaceFolder}/src",
                 "-I/opt/homebrew/include",
                 "-L/opt/homebrew/Cellar/sdl2/2.28.5/lib",
                 "-L/opt/homebrew/Cellar/sdl_ttf/2.0.11_2/lib",

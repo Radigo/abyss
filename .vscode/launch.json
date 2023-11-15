@@ -36,11 +36,11 @@
             "request": "launch",
             "program": "${workspaceFolder}/abyss",
             "args": [],
-            "stopAtEntry": true,
+            //"stopAtEntry": true,
             "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "lldb",
+            //"environment": [],
+            //"externalConsole": false,
+            //"MIMode": "lldb",
             "preLaunchTask": "Mac build"
         }
     ]

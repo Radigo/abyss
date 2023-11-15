@@ -5,8 +5,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "src/engine/renderer.hpp"
-#include "src/scene.hpp"
+#include "engine/renderer.hpp"
+#include "scene.hpp"
 
 static int windowWidth = 1280;
 static int windowHeight = 720;

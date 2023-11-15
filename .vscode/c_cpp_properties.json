@@ -20,7 +20,7 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/**",
                 "/opt/homebrew/include"
             ],
             "defines": [],
