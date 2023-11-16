@@ -1,10 +1,14 @@
 #pragma once
 
-#include "engine/controllable.hpp"
-#include "engine/displayable.hpp"
+#include "engine/gameobject.hpp"
 
-class Window : public Displayable, Controllable {
+class Displayable;
+
+class Window : public GameObject {
     public:
         Window(const int p_width, const int p_height);
         ~Window();
+
+    private:
+        Displayable* _display;
 };

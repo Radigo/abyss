@@ -2,9 +2,11 @@
 
 #include <vector>
 
+#include "engine/gameobject.hpp"
+
 using namespace std;
 
-class Displayable {
+class Displayable : public GameObject {
     public:
         struct Color {
             int r;
@@ -66,17 +68,9 @@ class Displayable {
         vector<Line> _drawableLines;
         vector<Rectangle> _drawableRectangles;
 
-    private:
-        int _x;
-        int _y;
-        Displayable* _parent;
-        
     public:
         Displayable();
         ~Displayable();
-
-        void setPosition(const int p_x, const int p_y);
-        void setParent(Displayable* p_displayable);
 
         // Draw
         void clear();
@@ -84,20 +78,6 @@ class Displayable {
         void addLine(const int p_x1, const int p_y1, const int p_x2, const int p_y2, const Color p_color = Color(255, 255, 255, 255));
         void addRectangle(const int p_x, const int p_y, const int p_w, const int p_h, const Color p_outColor = Color(255, 255, 255, 255), const Color p_inColor = Color(0, 0, 0, 0));
 
-        // Getters
-        inline int getX() {
-            if (_parent != nullptr)
-                return _x + _parent->getX();
-            return _x;
-        };
-        inline int getY() {
-            if (_parent != nullptr)
-                return _y + _parent->getY();
-            return _y;
-        };
-        inline Displayable* getParent() {
-            return _parent;
-        }
         // Draw
         inline vector<Point> getDrawablePoints() { return _drawablePoints; }
         inline vector<Line> getDrawableLines() { return _drawableLines; }

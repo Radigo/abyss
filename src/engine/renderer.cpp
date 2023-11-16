@@ -46,6 +46,8 @@ void Renderer::update() {
         int drawableX = displayable->getX();
         int drawableY = displayable->getY();
 
+        SDL_Log("renderer: %s, %d, %d", displayable->getId().c_str(), displayable->getX(), displayable->getY());
+
         for (Displayable::Point point : displayable->getDrawablePoints()) {
             SDL_SetRenderDrawColor(_renderer, point.color.r, point.color.g, point.color.b, point.color.a);
             SDL_RenderDrawPoint(_renderer, drawableX + point.x, drawableY + point.y);

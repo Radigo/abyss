@@ -1,10 +1,15 @@
 #pragma once
 
-#include "engine/displayable.hpp"
+#include "engine/gameobject.hpp"
 
-class CloseButton : public Displayable {
+class Displayable;
+
+class CloseButton : public GameObject {
     static constexpr int CLOSE_BUTTON_SIZE = 20;
     public:
         CloseButton();
         ~CloseButton();
+
+    private:
+        Displayable* _display;
 };

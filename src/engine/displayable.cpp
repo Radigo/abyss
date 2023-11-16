@@ -7,25 +7,14 @@ std::vector<Displayable*> Displayable::displayList;
 Displayable::Displayable() :
 _drawablePoints(),
 _drawableLines(),
-_drawableRectangles(),
-_x(0),
-_y(0),
-_parent()
+_drawableRectangles()
 {
     Displayable::displayList.emplace_back(this);
+    _id = "Displayable" + to_string(Displayable::displayList.size());
 }
 
 Displayable::~Displayable() {
 
-}
-
-void Displayable::setPosition(const int p_x, const int p_y) {
-    _x = p_x;
-    _y = p_y;
-}
-
-void Displayable::setParent(Displayable* p_displayable) {
-    _parent = p_displayable;
 }
 
 void Displayable::clear() {
