@@ -1,18 +1,21 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
 #include <iostream>
 #include <sstream>
+#include <string.h>
 
+#include "engine/globals.hpp"
 #include "engine/input.hpp"
 #include "engine/renderer.hpp"
 #include "scene.hpp"
 
-static int windowWidth = 1280;
-static int windowHeight = 720;
-static const int windowMinWidth = 320;
-static const int windowMinHeight = 200;
+std::string Globals::APP_PATH = "null";
+std::string Globals::ASSETS_PATH = "null";
+int Globals::WINDOW_WIDTH = -1;
+int Globals::WINDOW_HEIGHT = -1;
 
 int main(int /*argc*/, char** /*argv[]*/)
 {
@@ -43,8 +46,11 @@ int main(int /*argc*/, char** /*argv[]*/)
               << "." << std::to_string(linked.patch);
     std::cout << linkedVal.str() << std::endl;
 
-    // setup SDL window
+    // setup environment
+    Globals::APP_PATH = SDL_GetBasePath();
+    Globals::ASSETS_PATH = strcat(const_cast<char*>(Globals::APP_PATH.c_str()), "assets/");
 
+    // setup SDL window
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -87,12 +93,12 @@ int main(int /*argc*/, char** /*argv[]*/)
         "OpenGL SDL",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        windowWidth,
-        windowHeight,
+        Globals::WINDOW_WIDTH_INIT,
+        Globals::WINDOW_HEIGHT_INIT,
         window_flags
         );
     // limit to which minimum size user can resize the window
-    SDL_SetWindowMinimumSize(window, windowMinWidth, windowMinHeight);
+    SDL_SetWindowMinimumSize(window, Globals::WINDOW_WIDTH_MIN, Globals::WINDOW_HEIGHT_MIN);
     
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     if (gl_context == NULL)
@@ -123,7 +129,7 @@ int main(int /*argc*/, char** /*argv[]*/)
 
     // Create Scene
     Scene scene;
-    if (!scene.init()) {
+    if (!scene.init(Globals::WINDOW_WIDTH_INIT, Globals::WINDOW_HEIGHT_INIT)) {
         std::cerr << "[ERROR] Failed to create the main scene" << std::endl;
         return -1;
     }
@@ -145,14 +151,16 @@ int main(int /*argc*/, char** /*argv[]*/)
                     switch (event.window.event)
                     {
                     case SDL_WINDOWEVENT_RESIZED:
-                        windowWidth = event.window.data1;
-                        windowHeight = event.window.data2;
+                        Globals::WINDOW_WIDTH = event.window.data1;
+                        Globals::WINDOW_HEIGHT = event.window.data2;
                         std::cout << "[INFO] Window size: "
-                                  << windowWidth
+                                  << Globals::WINDOW_WIDTH
                                   << "x"
-                                  << windowHeight
+                                  << Globals::WINDOW_HEIGHT
                                   << std::endl;
                         // Formerly GL window resize call
+                        scene.sceneWidth = Globals::WINDOW_WIDTH;
+                        scene.sceneHeight = Globals::WINDOW_HEIGHT;
                         break;
                     }
                     break;
@@ -173,9 +181,6 @@ int main(int /*argc*/, char** /*argv[]*/)
                     break;
                 case SDL_MOUSEBUTTONUP:
                     input.onMouseButtonUp(event.button);
-                    break;
-                case SDL_MOUSEWHEEL:
-                    input.onMouseWheel(event.wheel);
                     break;
             }
         }

@@ -2,7 +2,10 @@
 
 #include <vector>
 
+#include <SDL2/SDL_render.h>
+
 #include "engine/gameobject.hpp"
+#include "engine/types.hpp"
 
 using namespace std;
 
@@ -20,66 +23,66 @@ class Displayable : public GameObject {
             a(p_a) {
             }
         };
-        struct Point {
-            int x;
-            int y;
+        struct DrawablePoint {
+            Types::Point point;
             Color color;
-            Point(const int p_x, const int p_y, const Color p_color) :
-            x(p_x),
-            y(p_y),
+            DrawablePoint(const Types::Point p_point, const Color p_color) :
+            point(p_point),
             color(p_color) {
             }
         };
-        struct Line {
-            int x1;
-            int y1;
-            int x2;
-            int y2;
+        struct DrawableLine {
+            Types::Line line;
             Color color;
-            Line(const int p_x1, const int p_y1, const int p_x2, const int p_y2, const Color p_color) :
-            x1(p_x1),
-            y1(p_y1),
-            x2(p_x2),
-            y2(p_y2),
+            DrawableLine(Types::Line p_line, const Color p_color) :
+            line(p_line),
             color(p_color) {
             }
         };
-        struct Rectangle {
-            int x;
-            int y;
-            int w;
-            int h;
+        struct DrawableRectangle {
+            Types::Rectangle rectangle;
             Color outColor;
             Color inColor;
-            Rectangle(const int p_x, const int p_y, const int p_w, const int p_h, const Color p_outColor, const Color p_inColor) :
-            x(p_x),
-            y(p_y),
-            w(p_w),
-            h(p_h),
+            DrawableRectangle(Types::Rectangle p_rectangle, const Color p_outColor, const Color p_inColor) :
+            rectangle(p_rectangle),
             outColor(p_outColor),
             inColor(p_inColor) {
+            }
+        };
+        struct DisplayableTexture {
+            SDL_Texture* texture;
+            const int initWidth;
+            const int initHeight;
+            DisplayableTexture(SDL_Texture* p_texture = nullptr, const int p_initWidth = 0, const int p_initHeight = 0) :
+            texture(p_texture),
+            initWidth(p_initWidth),
+            initHeight(p_initHeight) {
             }
         };
 
         static std::vector<Displayable*> displayList;
 
     protected:
-        vector<Point> _drawablePoints;
-        vector<Line> _drawableLines;
-        vector<Rectangle> _drawableRectangles;
+        vector<DrawablePoint> _drawablePoints;
+        vector<DrawableLine> _drawableLines;
+        vector<DrawableRectangle> _drawableRectangles;
+        vector<DisplayableTexture> _textures;
 
     public:
-        Displayable();
+        Displayable(GameObject* p_parent);
         ~Displayable();
 
-        // Draw
+        // Modifiers
         void clear();
         void addPoint(const int p_x, const int p_y, const Color p_color = Color(255, 255, 255, 255));
         void addLine(const int p_x1, const int p_y1, const int p_x2, const int p_y2, const Color p_color = Color(255, 255, 255, 255));
         void addRectangle(const int p_x, const int p_y, const int p_w, const int p_h, const Color p_outColor = Color(255, 255, 255, 255), const Color p_inColor = Color(0, 0, 0, 0));
+        void addTexture(SDL_Texture* p_texture, const int p_initWidth, const int p_initHeight);
+        void addTexture(DisplayableTexture p_displayableTexture);
 
-        // Draw
-        inline vector<Point> getDrawablePoints() { return _drawablePoints; }
-        inline vector<Line> getDrawableLines() { return _drawableLines; }
-        inline vector<Rectangle> getDrawableRectangles() { return _drawableRectangles; }
+        // Getters
+        inline vector<DrawablePoint> getDrawablePoints() { return _drawablePoints; }
+        inline vector<DrawableLine> getDrawableLines() { return _drawableLines; }
+        inline vector<DrawableRectangle> getDrawableRectangles() { return _drawableRectangles; }
+        inline vector<DisplayableTexture> getTextures() { return _textures; }
 };

@@ -8,26 +8,34 @@
 #include "engine/controllable.hpp"
 
 void Input::onMouseMove(SDL_MouseMotionEvent p_event) {
-    for (Controllable* controllable : Controllable::controllableList) {
-        // ToDo: Check if we are inside a controllabe
-        SDL_Log("Mouse moving");
+    for (size_t i = 0; i < Controllable::controllableList.size(); i++) {
+        // List may have changed in size
+        if (i >= Controllable::controllableList.size())
+            return;
+        Controllable* controllable = Controllable::controllableList.at(i);
+        if (controllable)
+            controllable->onMouseMove(Types::Point(p_event.x, p_event.y));
     }
 }
 
 void Input::onMouseButtonDown(SDL_MouseButtonEvent p_event) {
-    for (Controllable* controllable : Controllable::controllableList) {
-        // ToDo: Check if we are inside a controllable
-        SDL_Log("Mouse button pressed");
+    for (size_t i = 0; i < Controllable::controllableList.size(); i++) {
+        // List may have changed in size
+        if (i >= Controllable::controllableList.size())
+            return;
+        Controllable* controllable = Controllable::controllableList.at(i);
+        if (controllable)
+            controllable->onMouseButtonDown(Types::Point(p_event.x, p_event.y));
     }
 }
 
 void Input::onMouseButtonUp(SDL_MouseButtonEvent p_event) {
-    for (Controllable* controllable : Controllable::controllableList) {
-        // ToDo: Check if we are inside a controllable
-        SDL_Log("Mouse button released");
+    for (size_t i = 0; i < Controllable::controllableList.size(); i++) {
+        // List may have changed in size
+        if (i >= Controllable::controllableList.size())
+            return;
+        Controllable* controllable = Controllable::controllableList.at(i);
+        if (controllable)
+            controllable->onMouseButtonUp(Types::Point(p_event.x, p_event.y));
     }
-}
-
-void Input::onMouseWheel(SDL_MouseWheelEvent p_event) {
-
 }

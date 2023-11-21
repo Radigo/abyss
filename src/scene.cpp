@@ -1,27 +1,56 @@
 #include "scene.hpp"
 
 #include "engine/displayable.hpp"
+#include "engine/renderer.hpp"
+
+#include <time.h> // For rand only, try a fixed seed
 
 #include "SDL2/SDL_log.h"
 
-bool Scene::init() {
-    _window = new Window(400, 600);
-    _window->setPosition(100, 100);
+bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
+    sceneWidth = p_sceneWidth;
+    sceneHeight = p_sceneHeight;
 
-    _closeButton = new CloseButton();
-    _closeButton->setPosition(388, 12);
+    /* initialize random seed: */
+    srand(time(NULL));
 
-    _closeButton->setParent(_window);
+    CloseButton* createEmptyWindow = new CloseButton(nullptr, 30, [this](){ createWindow(); });
+    createEmptyWindow->setPosition(50, 50);
 
-    // We didn't change the position of displayable inside 'window' and 'button' with setPosition, just the GameObject position.
-    // The renderer gets x and y from displayable only, not 'window'
-    // - We want to keep position in GameObject for logic
-    // - Displayable should probably not be a GameObject
-    SDL_Log("scene: %s, %d, %d", _window->getId().c_str(), _window->getX(), _window->getY());
-    SDL_Log("scene: %s, %d, %d", _closeButton->getId().c_str(), _closeButton->getX(), _closeButton->getY());
+    CloseButton* createTextureWindow = new CloseButton(nullptr, 30, [this](){ createWindow("mnc_arrow.png"); });
+    createTextureWindow->setPosition(100, 50);
 
-    // Font test
-    //Renderer::addText("This is a sample text", "assets/font/Smaco_Regular8.ttf", { 255, 255, 255, 255 }, 16);
-    
     return true;
+}
+
+void Scene::createWindow(const std::string p_textureAssetName) {
+    std::string windowId = "window" + to_string(_windows.size());
+    int randWidth = 100 + rand() % 300;
+    int randHeight = 100 + rand() % 300;
+    int randX = rand() % sceneWidth;
+    int randY = rand() % sceneHeight;
+
+    Window* window = new Window(windowId, randWidth, randHeight, [this, windowId](){
+        deleteWindow(windowId);
+    });
+    window->setPosition(randX, randY);
+
+    if (!p_textureAssetName.empty()) {
+        Displayable* texture = new Displayable(window);
+        texture->addTexture(Renderer::createDisplayableTexture(p_textureAssetName.c_str()));
+        texture->setPosition(10, 30);
+    }
+
+    _windows.push_back(window);
+}
+
+void Scene::deleteWindow(const std::string p_id) {
+    for (size_t i = 0; i < _windows.size(); i++) {
+        Window* window = _windows.at(i);
+        if (window->getId() == p_id) {
+            _windows.erase(_windows.begin() + i);
+            delete(window);
+            break;
+        }
+    }
 }
