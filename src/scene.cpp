@@ -14,6 +14,8 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     /* initialize random seed: */
     srand(time(NULL));
 
+    _fpsCounter = new FpsCounter(nullptr);
+
     CloseButton* createEmptyWindow = new CloseButton(nullptr, 30, [this](){ createWindow(); });
     createEmptyWindow->setPosition(50, 50);
 

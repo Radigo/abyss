@@ -3,6 +3,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <chrono>
 #include <iostream>
 #include <sstream>
 #include <string.h>
@@ -10,6 +11,7 @@
 #include "engine/globals.hpp"
 #include "engine/input.hpp"
 #include "engine/renderer.hpp"
+#include "engine/updater.hpp"
 #include "scene.hpp"
 
 std::string Globals::APP_PATH = "null";
@@ -136,6 +138,10 @@ int main(int /*argc*/, char** /*argv[]*/)
 
     // --- main loop
     bool loop = true;
+    double frameDuration = 1.0 / Globals::FPS_TARGET;
+    double currentFrameDuration = frameDuration;
+    auto currentFrameTime = std::chrono::system_clock::now();
+
     while (loop)
     {
         SDL_Event event;
@@ -185,7 +191,26 @@ int main(int /*argc*/, char** /*argv[]*/)
             }
         }
 
-        renderer.update();
+        // Make sure we render only at FPS target
+        auto newFrameTime = std::chrono::system_clock::now();
+        auto frameDeltaTime = newFrameTime - currentFrameTime;
+        currentFrameTime = newFrameTime;
+        
+        //frameTime = frameDuration;
+        auto currentUpdateTime = newFrameTime;
+        currentFrameDuration = frameDuration;
+
+        while (currentFrameDuration > 0.0) {
+            auto newUpdateTime = std::chrono::system_clock::now();
+            auto updateDeltaTime = newUpdateTime - currentUpdateTime;
+            double updateDuration = std::chrono::duration<double>(updateDeltaTime).count();
+            Updater::update(std::chrono::duration<double>(frameDeltaTime).count(), updateDuration);
+            currentFrameDuration -= updateDuration;
+            currentUpdateTime = std::chrono::system_clock::now();
+            << fix this never exits the update loop
+        }
+
+        renderer.update(std::chrono::duration<double>(frameDeltaTime).count());
     }
 
     SDL_GL_DeleteContext(gl_context);

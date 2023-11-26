@@ -26,7 +26,7 @@ class GameObject {
         inline std::string getId() { return _id; }
         inline int getX() {
             if (_parent != nullptr)
-                return _x + _parent->getX();
+                 return _x + _parent->getX();
             return _x;
         };
         inline int getY() {

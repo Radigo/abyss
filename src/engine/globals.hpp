@@ -8,6 +8,7 @@ class Globals {
         static int WINDOW_WIDTH;
         static int WINDOW_HEIGHT;
 
+        static constexpr double FPS_TARGET = 60.0;
         static const int WINDOW_WIDTH_INIT = 1280;
         static const int WINDOW_HEIGHT_INIT = 720;
         static const int WINDOW_WIDTH_MIN = 320;

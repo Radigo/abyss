@@ -4,14 +4,9 @@
 #include "engine/types.hpp"
 
 #include <functional>
-#include <vector>
-
-//#include <SDL2/SDL_log.h>
 
 class Controllable : public GameObject {
     public:
-        static std::vector<Controllable*> controllableList;
-
         Controllable(GameObject* p_parent);
         ~Controllable();
 

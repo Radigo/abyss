@@ -2,7 +2,7 @@
 
 #include <SDL2/SDL_log.h>
 
-std::vector<Controllable*> Controllable::controllableList;
+#include "input.hpp"
 
 Controllable::Controllable(GameObject* p_parent) :
 _hitbox(0, 0, -1, -1),
@@ -11,8 +11,8 @@ _onClickCallback(nullptr),
 _onButtonDownCallback(nullptr),
 _onDragCallback(nullptr)
 {
-    Controllable::controllableList.emplace_back(this);
-    _id = "Controllable" + std::to_string(Controllable::controllableList.size());
+    size_t numControllables = Input::addControllable(this);
+    _id = "Controllable" + std::to_string(numControllables);
     _parent = p_parent;
 }
 
@@ -23,10 +23,7 @@ Controllable::~Controllable() {
     _onButtonDownCallback = nullptr;
     _onDragCallback = nullptr;
 
-    auto it = std::find(Controllable::controllableList.begin(), Controllable::controllableList.end(), this);
-    if (it == Controllable::controllableList.end())
-        static_assert(true, "removing controllable that is NOT in Controllable::controllableList");
-    Controllable::controllableList.erase(it);
+    Input::removeControllable(this);
 }
 
 void Controllable::onMouseButtonDown(Types::Point p_point) {

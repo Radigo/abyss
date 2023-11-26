@@ -7,34 +7,36 @@
 
 #include "engine/controllable.hpp"
 
+std::vector<Controllable*> Input::_controllableList;
+
 void Input::onMouseMove(SDL_MouseMotionEvent p_event) {
-    for (size_t i = 0; i < Controllable::controllableList.size(); i++) {
+    for (size_t i = 0; i < _controllableList.size(); i++) {
         // List may have changed in size
-        if (i >= Controllable::controllableList.size())
+        if (i >= _controllableList.size())
             return;
-        Controllable* controllable = Controllable::controllableList.at(i);
+        Controllable* controllable = _controllableList.at(i);
         if (controllable)
             controllable->onMouseMove(Types::Point(p_event.x, p_event.y));
     }
 }
 
 void Input::onMouseButtonDown(SDL_MouseButtonEvent p_event) {
-    for (size_t i = 0; i < Controllable::controllableList.size(); i++) {
+    for (size_t i = 0; i < _controllableList.size(); i++) {
         // List may have changed in size
-        if (i >= Controllable::controllableList.size())
+        if (i >= _controllableList.size())
             return;
-        Controllable* controllable = Controllable::controllableList.at(i);
+        Controllable* controllable = _controllableList.at(i);
         if (controllable)
             controllable->onMouseButtonDown(Types::Point(p_event.x, p_event.y));
     }
 }
 
 void Input::onMouseButtonUp(SDL_MouseButtonEvent p_event) {
-    for (size_t i = 0; i < Controllable::controllableList.size(); i++) {
+    for (size_t i = 0; i < _controllableList.size(); i++) {
         // List may have changed in size
-        if (i >= Controllable::controllableList.size())
+        if (i >= _controllableList.size())
             return;
-        Controllable* controllable = Controllable::controllableList.at(i);
+        Controllable* controllable = _controllableList.at(i);
         if (controllable)
             controllable->onMouseButtonUp(Types::Point(p_event.x, p_event.y));
     }

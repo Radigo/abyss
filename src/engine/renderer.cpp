@@ -13,6 +13,7 @@
 #include "engine/types.hpp"
 
 SDL_Renderer* Renderer::_renderer = nullptr;
+std::vector<Displayable*> Renderer::_displayList;
 
 bool Renderer::init(SDL_Window* p_window) {
     _renderer = SDL_CreateRenderer(p_window, -1, SDL_RENDERER_ACCELERATED);
@@ -42,12 +43,12 @@ bool Renderer::init(SDL_Window* p_window) {
     return true;
 }
 
-void Renderer::update() {
+void Renderer::update(const double&) {
     SDL_SetRenderDrawColor(_renderer, 0, 0, 0, 0);
     SDL_RenderClear(_renderer);
     
     // Draw all displayables
-    for (Displayable* displayable : Displayable::displayList) {
+    for (Displayable* displayable : Renderer::_displayList) {
         int drawableX = displayable->getX();
         int drawableY = displayable->getY();
 

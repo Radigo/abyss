@@ -51,16 +51,14 @@ class Displayable : public GameObject {
         };
         struct DisplayableTexture {
             SDL_Texture* texture;
-            const int initWidth;
-            const int initHeight;
+            int initWidth;
+            int initHeight;
             DisplayableTexture(SDL_Texture* p_texture = nullptr, const int p_initWidth = 0, const int p_initHeight = 0) :
             texture(p_texture),
             initWidth(p_initWidth),
             initHeight(p_initHeight) {
             }
         };
-
-        static std::vector<Displayable*> displayList;
 
     protected:
         vector<DrawablePoint> _drawablePoints;
@@ -74,11 +72,13 @@ class Displayable : public GameObject {
 
         // Modifiers
         void clear();
-        void addPoint(const int p_x, const int p_y, const Color p_color = Color(255, 255, 255, 255));
-        void addLine(const int p_x1, const int p_y1, const int p_x2, const int p_y2, const Color p_color = Color(255, 255, 255, 255));
-        void addRectangle(const int p_x, const int p_y, const int p_w, const int p_h, const Color p_outColor = Color(255, 255, 255, 255), const Color p_inColor = Color(0, 0, 0, 0));
-        void addTexture(SDL_Texture* p_texture, const int p_initWidth, const int p_initHeight);
-        void addTexture(DisplayableTexture p_displayableTexture);
+        size_t addPoint(const int p_x, const int p_y, const Color p_color = Color(255, 255, 255, 255));
+        size_t addLine(const int p_x1, const int p_y1, const int p_x2, const int p_y2, const Color p_color = Color(255, 255, 255, 255));
+        size_t addRectangle(const int p_x, const int p_y, const int p_w, const int p_h, const Color p_outColor = Color(255, 255, 255, 255), const Color p_inColor = Color(0, 0, 0, 0));
+        size_t addTexture(SDL_Texture* p_texture, const int p_initWidth, const int p_initHeight);
+        size_t addTexture(DisplayableTexture p_displayableTexture);
+        void updateTexture(size_t p_index, SDL_Texture* p_texture);
+        void updateTexture(size_t p_index, DisplayableTexture p_displayableTexture);
 
         // Getters
         inline vector<DrawablePoint> getDrawablePoints() { return _drawablePoints; }
