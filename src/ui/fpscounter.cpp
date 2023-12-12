@@ -1,6 +1,7 @@
 #include "fpscounter.hpp"
 
 #include <sstream>
+#include <iostream>
 
 #include "engine/displayable.hpp"
 #include "engine/updatable.hpp"
@@ -15,14 +16,14 @@ FpsCounter::FpsCounter(GameObject* p_parent) {
     _digits = new Displayable(this);
     _tfIndex = _digits->addTexture(Renderer::createDisplayableText("0000000000", Types::getFont(Types::Fonts::Regular)));
     
-    _updater = new Updatable(this, [this](const double& p_frameDeltaTime, const double& p_updateDeltaTime){ _updateCounter(p_frameDeltaTime, p_updateDeltaTime); });
+    _updater = new Updatable(this, [this](const double& p_deltaTime){ _updateCounter(p_deltaTime); });
 }
 
 FpsCounter::~FpsCounter() {
     delete(_display);
 }
 
-void FpsCounter::_updateCounter(const double& p_frameDeltaTime, const double&) {
-    std::string strFrameDelta = std::to_string(p_frameDeltaTime);
+void FpsCounter::_updateCounter(const double& p_deltaTime) {
+    std::string strFrameDelta = std::to_string(p_deltaTime);
     _digits->updateTexture(_tfIndex, Renderer::createDisplayableText(strFrameDelta, Types::getFont(Types::Fonts::Regular)));
 }

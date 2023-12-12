@@ -27,4 +27,5 @@ class Input {
         void onMouseMove(SDL_MouseMotionEvent p_event);
         void onMouseButtonDown(SDL_MouseButtonEvent p_event);
         void onMouseButtonUp(SDL_MouseButtonEvent p_event);
+        void onKey(SDL_KeyboardEvent p_event);
 };

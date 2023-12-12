@@ -25,7 +25,7 @@ Window::Window(std::string p_id, const int p_width, const int p_height, std::fun
 
     _dragArea = new Controllable(this);
     _dragArea->setHitbox(Types::Rectangle(0, 0, (p_width - TOP_BAR_SIZE), TOP_BAR_SIZE));
-    _dragArea->setOnButtonDown([this](Types::Point p_position){
+    _dragArea->setOnMouseButtonDown([this](Types::Point p_position){
         _dragOrigin = p_position - Types::Point(getX(), getY());
     });
     _dragArea->setOnDragMove([this](Types::Point p_position){

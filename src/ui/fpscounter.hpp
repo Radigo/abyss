@@ -18,5 +18,5 @@ class FpsCounter : public GameObject {
 
         size_t _tfIndex;
 
-        void _updateCounter(const double& p_frameDeltaTime, const double& p_updateDeltaTime);
+        void _updateCounter(const double& p_deltaTime);
 };

@@ -7,8 +7,10 @@
 Controllable::Controllable(GameObject* p_parent) :
 _hitbox(0, 0, -1, -1),
 _isDownInside(false),
+_moveState(0u),
+_buttonState(0u),
 _onClickCallback(nullptr),
-_onButtonDownCallback(nullptr),
+_onMouseButtonDownCallback(nullptr),
 _onDragCallback(nullptr)
 {
     size_t numControllables = Input::addControllable(this);
@@ -20,7 +22,7 @@ Controllable::~Controllable() {
     SDL_Log("<Controllable::~Controllable> %s", getId().c_str());
     
     _onClickCallback = nullptr;
-    _onButtonDownCallback = nullptr;
+    _onMouseButtonDownCallback = nullptr;
     _onDragCallback = nullptr;
 
     Input::removeControllable(this);
@@ -31,8 +33,8 @@ void Controllable::onMouseButtonDown(Types::Point p_point) {
         return;
     }
     
-    if (_onButtonDownCallback)
-        _onButtonDownCallback(p_point);
+    if (_onMouseButtonDownCallback)
+        _onMouseButtonDownCallback(p_point);
     
     _isDownInside = true;
 }

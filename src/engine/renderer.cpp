@@ -21,7 +21,6 @@ bool Renderer::init(SDL_Window* p_window) {
     SDL_RendererInfo infoRenderer;
     SDL_GetRendererInfo(_renderer, &infoRenderer);
 
-    /*
     if (infoRenderer.flags & SDL_RENDERER_ACCELERATED)
     {
         SDL_Log("Accelerated render available");
@@ -36,7 +35,6 @@ bool Renderer::init(SDL_Window* p_window) {
     {
         SDL_Log("Texture render available");
     }
-    */
 
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 

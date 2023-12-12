@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iostream>
 #include <sstream>
+#include <thread>
 #include <string.h>
 
 #include "engine/globals.hpp"
@@ -72,6 +73,10 @@ int main(int /*argc*/, char** /*argv[]*/)
         );
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(
+        SDL_WINDOW_OPENGL
+        | SDL_WINDOW_RESIZABLE
+        );
 #elif __linux__
     // GL 3.2 Core + GLSL 150
     glsl_version = "#version 150";
@@ -84,13 +89,13 @@ int main(int /*argc*/, char** /*argv[]*/)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0); 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#endif
-    
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(
         SDL_WINDOW_OPENGL
-        | SDL_WINDOW_RESIZABLE
         | SDL_WINDOW_ALLOW_HIGHDPI
+        | SDL_WINDOW_RESIZABLE
         );
+#endif
+
     SDL_Window *window = SDL_CreateWindow(
         "OpenGL SDL",
         SDL_WINDOWPOS_CENTERED,
@@ -112,8 +117,8 @@ int main(int /*argc*/, char** /*argv[]*/)
     SDL_GL_MakeCurrent(window, gl_context);
     
     // enable VSync
-    SDL_GL_SetSwapInterval(1);
-
+    //SDL_GL_SetSwapInterval(1);
+    
     // Create renderer
     Renderer renderer;
     if (!renderer.init(window)) {
@@ -138,10 +143,10 @@ int main(int /*argc*/, char** /*argv[]*/)
 
     // --- main loop
     bool loop = true;
-    double frameDuration = 1.0 / Globals::FPS_TARGET;
-    double currentFrameDuration = frameDuration;
-    auto currentFrameTime = std::chrono::system_clock::now();
-
+    std::chrono::time_point<std::chrono::system_clock> currentTime = std::chrono::system_clock::now();
+    std::chrono::duration<long, std::micro> deltaTime = std::chrono::microseconds(1);
+    const auto kFrameDuration = std::chrono::system_clock::duration(1000000 / Globals::FPS_TARGET);
+    
     while (loop)
     {
         SDL_Event event;
@@ -172,10 +177,14 @@ int main(int /*argc*/, char** /*argv[]*/)
                     break;
 
                 case SDL_KEYDOWN:
+                case SDL_KEYUP:
                     switch (event.key.keysym.sym)
                     {
                     case SDLK_ESCAPE:
                         loop = false;
+                        break;
+                    default:
+                        input.onKey(event.key);
                         break;
                     }
                     break;
@@ -192,25 +201,18 @@ int main(int /*argc*/, char** /*argv[]*/)
         }
 
         // Make sure we render only at FPS target
-        auto newFrameTime = std::chrono::system_clock::now();
-        auto frameDeltaTime = newFrameTime - currentFrameTime;
-        currentFrameTime = newFrameTime;
+        double timeRatio = static_cast<double>(deltaTime.count()) / static_cast<double>(kFrameDuration.count());
         
-        //frameTime = frameDuration;
-        auto currentUpdateTime = newFrameTime;
-        currentFrameDuration = frameDuration;
+        Updater::update(timeRatio);
+        renderer.update(timeRatio);
+        
+        deltaTime = std::chrono::system_clock::now() - currentTime;
 
-        while (currentFrameDuration > 0.0) {
-            auto newUpdateTime = std::chrono::system_clock::now();
-            auto updateDeltaTime = newUpdateTime - currentUpdateTime;
-            double updateDuration = std::chrono::duration<double>(updateDeltaTime).count();
-            Updater::update(std::chrono::duration<double>(frameDeltaTime).count(), updateDuration);
-            currentFrameDuration -= updateDuration;
-            currentUpdateTime = std::chrono::system_clock::now();
-            << fix this never exits the update loop
+        while (kFrameDuration > deltaTime) {
+            deltaTime = std::chrono::system_clock::now() - currentTime;
         }
 
-        renderer.update(std::chrono::duration<double>(frameDeltaTime).count());
+        currentTime = std::chrono::system_clock::now();
     }
 
     SDL_GL_DeleteContext(gl_context);

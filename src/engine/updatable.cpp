@@ -7,7 +7,7 @@
 
 #include <SDL2/SDL_log.h>
 
-Updatable::Updatable(GameObject* p_parent, std::function<void(const double&, const double&)> p_onUpdateCallback) {
+Updatable::Updatable(GameObject* p_parent, std::function<void(const double&)> p_onUpdateCallback) {
     size_t numUpdatables = Updater::addUpdatable(this);
     _id = "Updatable" + std::to_string(numUpdatables);
     _parent = p_parent;
@@ -20,8 +20,8 @@ Updatable::~Updatable() {
     Updater::removeUpdatable(this);
 }
 
-void Updatable::update(const double& p_frameDeltaTime, const double& p_updateDeltaTime) {
+void Updatable::update(const double& p_deltaTime) {
     if (_onUpdateCallback) {
-        _onUpdateCallback(p_frameDeltaTime, p_updateDeltaTime);
+        _onUpdateCallback(p_deltaTime);
     }
 }

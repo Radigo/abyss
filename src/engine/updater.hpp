@@ -19,7 +19,7 @@ class Updater {
             return _updatableList.size();
         }
 
-        static void update(const double& p_frameDeltaTime, const double& p_updateDeltaTime);
+        static void update(const double& p_deltaTime);
 
     private:
         static std::vector<Updatable*> _updatableList;

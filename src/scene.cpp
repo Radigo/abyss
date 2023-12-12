@@ -2,6 +2,7 @@
 
 #include "engine/displayable.hpp"
 #include "engine/renderer.hpp"
+#include "ui/textbutton.hpp"
 
 #include <time.h> // For rand only, try a fixed seed
 
@@ -16,11 +17,11 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
 
     _fpsCounter = new FpsCounter(nullptr);
 
-    CloseButton* createEmptyWindow = new CloseButton(nullptr, 30, [this](){ createWindow(); });
+    TextButton* createEmptyWindow = new TextButton(nullptr, "Create empty window", [this](){ createWindow(); });
     createEmptyWindow->setPosition(50, 50);
 
-    CloseButton* createTextureWindow = new CloseButton(nullptr, 30, [this](){ createWindow("mnc_arrow.png"); });
-    createTextureWindow->setPosition(100, 50);
+    TextButton* createTextureWindow = new TextButton(nullptr, "Create texture window", [this](){ createWindow("mnc_arrow.png"); });
+    createTextureWindow->setPosition(50, 100);
 
     return true;
 }
