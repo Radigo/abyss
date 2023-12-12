@@ -3,6 +3,7 @@
 #include "engine/displayable.hpp"
 #include "engine/renderer.hpp"
 #include "ui/textbutton.hpp"
+#include "game/blocks.hpp"
 
 #include <time.h> // For rand only, try a fixed seed
 
@@ -22,6 +23,8 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
 
     TextButton* createTextureWindow = new TextButton(nullptr, "Create texture window", [this](){ createWindow("mnc_arrow.png"); });
     createTextureWindow->setPosition(50, 100);
+
+    Blocks* blocks = new Blocks(10, 20);
 
     return true;
 }

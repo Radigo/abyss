@@ -15,6 +15,7 @@
                 "${workspaceFolder}/src/*.cpp",
                 "${workspaceFolder}/src/engine/*.cpp",
                 "${workspaceFolder}/src/ui/*.cpp",
+                "${workspaceFolder}/src/game/*.cpp",
                 "-I${workspaceFolder}/src",
                 "-lSDL2",
                 "-lSDL2main",
