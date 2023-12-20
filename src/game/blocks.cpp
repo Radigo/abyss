@@ -5,9 +5,34 @@
 
 #include "engine/updatable.hpp"
 
+void Blocks::Tetromino::applyGravity(const float& p_gravity) {
+    _gravityStatus += p_gravity;
+    if (_gravityStatus < Blocks::GRAVITY_1_G)
+        return;
+    
+    // We move down by 1G
+    _gravityStatus -= Blocks::GRAVITY_1_G;
+    _y+=1;
+    // Resolve collisions
+    // Handle lock
+}
+
+void Blocks::Tetromino::move(const int& p_direction) {
+    _x += p_direction;
+    // Resolve collisions
+}
+
+void Blocks::Tetromino::rotate(const int& p_direction) {
+    _rotation += p_direction;
+    // Resolve collisions
+}
+
 Blocks::Blocks(const int& p_numColumns, const int& p_numRows) :
-_playfield({})
+_state(GameState::SPAWN_TETROMINO),
+_playfield({}),
+_level(0)
 {
+    // ToDo: add a buffer row on top, make sure it's hidden when we want to draw the playfield
     for (int i = 0; i < p_numRows; i++) {
         std::vector<Block> row = {};
         for (int j = 0; j < p_numColumns; j++) {
@@ -17,58 +42,46 @@ _playfield({})
     }
 
     _updater = new Updatable(this, [this](const double& p_frameDeltaTime){ _updateGame(p_frameDeltaTime); });
+
+    _pickNextTetromino();
 }
 
 Blocks::~Blocks() {
-    
-}
-
-Immplement tetromino map from here: https://tetris.wiki/Arika_Rotation_System
-
-std::vector<std::vector<Blocks::Block>> Blocks::getTetromino(const TetrominoType& p_type) {
-    std::vector<int> colors;
-    switch (p_type) {
-        case Blocks::TetrominoType::I:
-            colors = {
-                -1, -1, -1, -1,
-                 0,  0,  0,  0,
-                -1, -1, -1, -1,
-                -1, -1, -1, -1,
-            };
-        case O:
-            colors = {
-                -1, -1, -1, -1,
-                -1,  1,  1, -1,
-                -1,  1,  1, -1,
-                -1, -1, -1, -1,
-            };
-            break;
-        case S:
-            break;
-        case Z:
-            break;
-        case J:
-            break;
-        case L:
-            break;
-        case T:
-            break;
-    }
-
-    const int TETROMINO_SIZE = 4;
-    std::vector<std::vector<Blocks::Block>> tetromino;
-
-    for (size_t i = 0; i < TETROMINO_SIZE; i++) {
-        tetromino.emplace_back(std::vector<Blocks::Block>(TETROMINO_SIZE));
-    }
-
-    for (size_t i = 0; i < colors.size(); i++) {
-        size_t column = i % TETROMINO_SIZE;
-        size_t row = std::floor(i / TETROMINO_SIZE);
-        tetromino.at(column).at(row) = Block(colors.at(i));
-    }
+    if (_activePiece)
+        delete _activePiece;
 }
 
 void Blocks::_updateGame(const double&) {
-    
+    _frameTick++;
+
+    switch (_state) {
+        case SPAWN_TETROMINO:
+            // We pick a piece and place it on the playfield (includes ARE)
+
+            // Wait for ARE (prepare IRS)
+            if (_frameTick >= _getAre(_level)) {
+                // Spawn piece at correct location on the playfield (create the Tetromino* object)
+                // ToDo: implement IRS
+                _activePiece = new Tetromino(_nextTetromino, 0, 0, 0);
+                _state = GameState::MOVE_TETROMINO;
+                // Select the next piece
+                _pickNextTetromino();
+            }
+            break;
+        case MOVE_TETROMINO:
+            // The gravity applies, we control the piece (includes lock delay)
+            _activePiece->applyGravity(_getGravity(_level));
+            break;
+        case LOCK_TETROMINO:
+            // The piece locks and we resolve lines (includes clear delay)
+            delete _activePiece;
+            break;
+        case GAME_OVER:
+            // Game freezes and send an end signal to the void
+            break;
+    }
+}
+
+void Blocks::_pickNextTetromino() {
+    _nextTetromino = _getTetromino(static_cast<TetrominoType>(rand() % 7), 0);
 }

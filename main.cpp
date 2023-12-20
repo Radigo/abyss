@@ -206,11 +206,23 @@ int main(int /*argc*/, char** /*argv[]*/)
         Updater::update(timeRatio);
         renderer.update(timeRatio);
         
+        /*
+        Windows (but try it on Mac too)
+        */
+        deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - currentTime);
+
+        while (kFrameDuration > deltaTime) {
+            deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - currentTime);
+        }
+
+        /*
+        MacOs
         deltaTime = std::chrono::system_clock::now() - currentTime;
 
         while (kFrameDuration > deltaTime) {
             deltaTime = std::chrono::system_clock::now() - currentTime;
         }
+        */
 
         currentTime = std::chrono::system_clock::now();
     }
