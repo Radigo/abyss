@@ -1,7 +1,7 @@
 #include "gameobject.hpp"
 
 GameObject::GameObject() :
-_parent(),
+_parent(nullptr),
 _id(""),
 _x(0),
 _y(0)

@@ -51,6 +51,21 @@ Blocks::~Blocks() {
         delete _activePiece;
 }
 
+// Returns a generic view of the playfield
+std::vector<std::vector<int>> Blocks::getPlayfield() {
+    std::vector<std::vector<int>> playfieldView;
+
+    for (auto row : _playfield) {
+        std::vector<int> rowView;
+        for (auto column : row) {
+            rowView.push_back(column.colorIndex);
+        }
+        playfieldView.push_back(rowView);
+    }
+
+    return playfieldView;
+}
+
 void Blocks::_updateGame(const double&) {
     _frameTick++;
 
@@ -64,6 +79,7 @@ void Blocks::_updateGame(const double&) {
                 // ToDo: implement IRS
                 _activePiece = new Tetromino(_nextTetromino, 0, 0, 0);
                 _state = GameState::MOVE_TETROMINO;
+                _frameTick = 0;
                 // Select the next piece
                 _pickNextTetromino();
             }
@@ -71,13 +87,22 @@ void Blocks::_updateGame(const double&) {
         case MOVE_TETROMINO:
             // The gravity applies, we control the piece (includes lock delay)
             _activePiece->applyGravity(_getGravity(_level));
+            if (_frameTick >= 60) {
+                delete _activePiece;
+                _state = GameState::CLEAR_LINE;
+                _frameTick = 0;
+            }
             break;
-        case LOCK_TETROMINO:
+        case CLEAR_LINE:
             // The piece locks and we resolve lines (includes clear delay)
-            delete _activePiece;
+            if (_frameTick >= _getLineClear(_level)) {
+                _state = GameState::SPAWN_TETROMINO;
+                _frameTick = 0;
+            }
             break;
         case GAME_OVER:
             // Game freezes and send an end signal to the void
+            _frameTick = 0;
             break;
     }
 }

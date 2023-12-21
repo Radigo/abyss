@@ -16,17 +16,13 @@ Lines clear when rows are full
 class Updatable;
 
 class Blocks : public GameObject {
-    public:
-        Blocks(const int& p_numColumns, const int& p_numRows);
-        ~Blocks();
-
     private:
         static const int GRAVITY_1_G = 256;
 
         enum GameState {
             SPAWN_TETROMINO,    // We pick a piece and place it on the playfield (includes ARE)
             MOVE_TETROMINO,     // The gravity applies, we control the piece (includes lock delay)
-            LOCK_TETROMINO,     // The piece locks and we resolve lines (includes clear delay)
+            CLEAR_LINE,         // We clear the line(s) and rearrange the playfield (includes clear delay)
             GAME_OVER           // Game freezes and send an end signal to the void
         };
 
@@ -72,6 +68,17 @@ class Blocks : public GameObject {
         Tetromino* _activePiece;
         Updatable* _updater;
 
+    public:
+        Blocks(const int& p_numColumns, const int& p_numRows);
+        ~Blocks();
+
+        std::vector<std::vector<int>> getPlayfield();
+
+        inline int getLevel() { return _level; }
+        inline int getState() { return _state; }
+        inline int getFrameTick() { return _frameTick; }
+
+    private:
         void _updateGame(const double& p_frameDeltaTime);
         void _pickNextTetromino();
 

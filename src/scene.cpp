@@ -6,6 +6,7 @@
 #include "ui/fpscounter.hpp"
 #include "ui/textbutton.hpp"
 #include "game/blocks.hpp"
+#include "game/blocksview.hpp"
 
 #include <time.h> // For rand only, try a fixed seed
 
@@ -31,6 +32,8 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     createTextureWindow->setPosition(50, 100);
 
     Blocks* blocks = new Blocks(10, 20);
+    BlocksView* blocksView = new BlocksView(this, blocks);
+    blocksView->setPosition(400, 10);
 
     return true;
 }
