@@ -48,6 +48,7 @@
                 "${workspaceFolder}/abyss",
                 "${workspaceFolder}/src/*.cpp",
                 "${workspaceFolder}/src/engine/*.cpp",
+                "${workspaceFolder}/src/game/*.cpp",
                 "${workspaceFolder}/src/ui/*.cpp",
                 "-I${workspaceFolder}/src",
                 "-I/opt/homebrew/include",

@@ -3,22 +3,25 @@
 #include <vector>
 #include <string>
 
-#include "ui/fpscounter.hpp"
+//#include "ui/fpscounter.hpp"
 #include "ui/window.hpp"
 
 class SDL_Texture;
 class SDL_Color;
 class SDL_Renderer;
+class FpsCounter;
+class ControlTester;
 
 using namespace std;
 
-class Scene {
+class Scene : public GameObject {
     public:
-        int sceneWidth;
-        int sceneHeight;
+        static int sceneWidth;
+        static int sceneHeight;
 
     private:
         FpsCounter* _fpsCounter;
+        ControlTester* _controlTester;
         std::vector<Window*> _windows;
 
         void createWindow(const std::string p_textureAssetName = "");

@@ -170,8 +170,8 @@ int main(int /*argc*/, char** /*argv[]*/)
                                   << Globals::WINDOW_HEIGHT
                                   << std::endl;
                         // Formerly GL window resize call
-                        scene.sceneWidth = Globals::WINDOW_WIDTH;
-                        scene.sceneHeight = Globals::WINDOW_HEIGHT;
+                        Scene::sceneWidth = Globals::WINDOW_WIDTH;
+                        Scene::sceneHeight = Globals::WINDOW_HEIGHT;
                         break;
                     }
                     break;

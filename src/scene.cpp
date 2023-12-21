@@ -2,6 +2,8 @@
 
 #include "engine/displayable.hpp"
 #include "engine/renderer.hpp"
+#include "game/controltester.hpp"
+#include "ui/fpscounter.hpp"
 #include "ui/textbutton.hpp"
 #include "game/blocks.hpp"
 
@@ -9,14 +11,18 @@
 
 #include "SDL2/SDL_log.h"
 
+int Scene::sceneWidth = 0;
+int Scene::sceneHeight = 0;
+
 bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
-    sceneWidth = p_sceneWidth;
-    sceneHeight = p_sceneHeight;
+    Scene::sceneWidth = p_sceneWidth;
+    Scene::sceneHeight = p_sceneHeight;
 
     /* initialize random seed: */
     srand(time(NULL));
 
     _fpsCounter = new FpsCounter(nullptr);
+    _controlTester = new ControlTester(nullptr);
 
     TextButton* createEmptyWindow = new TextButton(nullptr, "Create empty window", [this](){ createWindow(); });
     createEmptyWindow->setPosition(50, 50);
@@ -33,8 +39,8 @@ void Scene::createWindow(const std::string p_textureAssetName) {
     std::string windowId = "window" + to_string(_windows.size());
     int randWidth = 100 + rand() % 300;
     int randHeight = 100 + rand() % 300;
-    int randX = rand() % sceneWidth;
-    int randY = rand() % sceneHeight;
+    int randX = rand() % Scene::sceneWidth;
+    int randY = rand() % Scene::sceneHeight;
 
     Window* window = new Window(windowId, randWidth, randHeight, [this, windowId](){
         deleteWindow(windowId);
