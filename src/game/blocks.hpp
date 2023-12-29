@@ -14,6 +14,7 @@ Lines clear when rows are full
 #include "engine/gameobject.hpp"
 
 class Updatable;
+class Controllable;
 
 class Blocks : public GameObject {
     private:
@@ -38,35 +39,44 @@ class Blocks : public GameObject {
 
         struct Tetromino {
             public:
-            Tetromino(const std::vector<Block>& p_color, const int& p_x, const int& p_y, const int& p_rotation) :
-            _pieceBlocks(p_color),
+            Tetromino(const TetrominoType& p_type, const int& p_x, const int& p_y, const int& p_rotation) :
+            _type(p_type),
+            _rotation(p_rotation),
             _x(p_x),
             _y(p_y),
-            _rotation(p_rotation) {}
+            _gravityTick(0) {}
             ~Tetromino() {}
 
-            void applyGravity(const float& p_gravity);
+            void applyGravity(const int& p_gravity);
             void move(const int& p_direction);
             void rotate(const int& p_direction);
 
+            inline TetrominoType getType() { return _type; }
+            inline int getRotation() { return _rotation; }
+            inline int getX() { return _x; }
+            inline int getY() { return _y; }
+
             private:
-                std::vector<Block> _pieceBlocks;
-                // Increase each time gravity is applied.
-                // The piece falls down by the amount of gravity as soon as the gravity exceeds 1
-                int _gravityStatus;
+                TetrominoType _type;
+                int _rotation;
                 int _x;
                 int _y;
-                int _rotation;
+                int _gravityTick;
         };
 
         GameState _state;
         std::vector<std::vector<Block>> _playfield;
         int _level;
         int _frameTick;// Our main internal time counter for each state
-        std::vector<Block> _nextTetromino;
+        TetrominoType _nextTetromino;
+
+        int _dasCounter;// Delayed Auto Shift (holding direction)
+        bool _btnIsReleased[3];
+        std::vector<size_t> _clearedLines;
 
         Tetromino* _activePiece;
         Updatable* _updater;
+        Controllable* _input;
 
     public:
         Blocks(const int& p_numColumns, const int& p_numRows);
@@ -81,6 +91,11 @@ class Blocks : public GameObject {
     private:
         void _updateGame(const double& p_frameDeltaTime);
         void _pickNextTetromino();
+        int _getSpawnX();
+        bool _isActivePiecePositionValid(const int& p_x, const int& p_y, const int& p_rotation);
+        void _lockPiece();
+        std::vector<size_t> _clearLines();
+        void _reorganizePlayfieldAfterLineClear();
 
         inline int _getAre(const int&) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
@@ -136,7 +151,7 @@ class Blocks : public GameObject {
             else return 4;
         }
 
-        inline std::vector<Block> _getTetromino(const TetrominoType& p_type, const int& p_rotation) {
+        inline std::vector<Block> _getBlocks(const TetrominoType& p_type, const int& p_rotation) {
             // Tetromino map from: https://tetris.wiki/Arika_Rotation_System
             std::vector<std::vector<int>> colors;
             switch (p_type) {
@@ -258,12 +273,12 @@ class Blocks : public GameObject {
                     break;
             }
 
-            std::vector<Blocks::Block> tetromino;
-
-            for (size_t i = 0; i < colors.size(); i++) {
-                tetromino.push_back(Block(colors.at(i).at(p_rotation % colors.at(i).size())));
+            std::vector<Blocks::Block> blocks;
+            std::vector<int> colorsAtRotation = colors.at(p_rotation % colors.size());
+            for (size_t i = 0; i < colorsAtRotation.size(); i++) {
+                blocks.push_back(Block(colorsAtRotation.at(i)));
             }
 
-            return tetromino;
+            return blocks;
         }
 };

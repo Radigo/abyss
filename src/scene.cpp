@@ -29,7 +29,7 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     createEmptyWindow->setPosition(50, 50);
 
     TextButton* createTextureWindow = new TextButton(nullptr, "Create texture window", [this](){ createWindow("mnc_arrow.png"); });
-    createTextureWindow->setPosition(50, 100);
+    createTextureWindow->setPosition(50, 80);
 
     Blocks* blocks = new Blocks(10, 20);
     BlocksView* blocksView = new BlocksView(this, blocks);

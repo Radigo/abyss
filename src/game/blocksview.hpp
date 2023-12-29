@@ -19,6 +19,7 @@ class BlocksView : public GameObject {
         Displayable* _display;
         Displayable* _debugTf;
         size_t _tfIndex;
+
         Updatable* _updater;
 
         void _drawPlayfield();
