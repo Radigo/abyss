@@ -9,12 +9,11 @@ class Updatable;
 
 class BlocksView : public GameObject {
     public:
-        BlocksView(GameObject* p_parent, Blocks* p_game);
+        BlocksView(GameObject* p_parent, Blocks* p_game, const int& p_cellSize);
         ~BlocksView();
 
     private:
-        static const int CELL_SIZE = 32;
-
+        int _cellSize;
         Blocks* _game;
         Displayable* _display;
         Displayable* _debugTf;
@@ -23,5 +22,5 @@ class BlocksView : public GameObject {
         Updatable* _updater;
 
         void _drawPlayfield();
-        Displayable::Color _getBlockColor(const int& p_colorIndex);
+        Displayable::Color _getBlockColor(const std::pair<int, float>& p_colorIndex);
 };

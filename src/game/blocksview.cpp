@@ -10,7 +10,8 @@
 
 #include "SDL2/SDL_log.h"
 
-BlocksView::BlocksView(GameObject* p_parent, Blocks* p_game) :
+BlocksView::BlocksView(GameObject* p_parent, Blocks* p_game, const int& p_cellSize) :
+_cellSize(p_cellSize),
 _game(p_game)
 {
     _parent = p_parent;
@@ -18,7 +19,7 @@ _game(p_game)
     _display = new Displayable(this);
     _debugTf = new Displayable(this);
     _tfIndex = _debugTf->addTexture(Renderer::createDisplayableText("0000000000", Types::getFont(Types::Fonts::Regular)));
-    _debugTf->setPosition(0, 20 * CELL_SIZE);
+    _debugTf->setPosition(0, 20 * _cellSize);
 
     _updater = new Updatable(this, [this](const double& p_deltaTime){ _drawPlayfield(); });
 }
@@ -38,7 +39,7 @@ void BlocksView::_drawPlayfield() {
             Displayable::Color cellColor = _getBlockColor(row.at(colIdx));
 
             // Draw cell at position
-            _display->addRectangle(colIdx * CELL_SIZE, rowIdx * CELL_SIZE, CELL_SIZE, CELL_SIZE, Displayable::Color(255, 255, 255, 32), cellColor);
+            _display->addRectangle(colIdx * _cellSize, rowIdx * _cellSize, _cellSize, _cellSize, Displayable::Color(255, 255, 255, 32), cellColor);
         }
     }
 
@@ -59,29 +60,35 @@ void BlocksView::_drawPlayfield() {
     _debugTf->updateTexture(_tfIndex, Renderer::createDisplayableText(message, Types::getFont(Types::Fonts::Regular)));
 }
 
-Displayable::Color BlocksView::_getBlockColor(const int& p_colorIndex) {
-    if (p_colorIndex == 0) {
+Displayable::Color BlocksView::_getBlockColor(const std::pair<int, float>& p_colorIndex) {
+    const int& colorIndex = p_colorIndex.first;
+    const float& lockRatio = p_colorIndex.second;
+    Displayable::Color displayableColor = Displayable::Color(0, 0, 0, 0);
+
+    if (colorIndex == 0) {
         // Red
-        return Displayable::Color(255, 0, 0, 255);
-    } else if (p_colorIndex == 1) {
+        displayableColor = Displayable::Color(255, 0, 0, 255);
+    } else if (colorIndex == 1) {
         // Cyan
-        return Displayable::Color(0, 255, 255, 255);
-    } else if (p_colorIndex == 2) {
+        displayableColor = Displayable::Color(0, 255, 255, 255);
+    } else if (colorIndex == 2) {
         // Orange
-        return Displayable::Color(255, 128, 0, 255);
-    } else if (p_colorIndex == 3) {
+        displayableColor = Displayable::Color(255, 128, 0, 255);
+    } else if (colorIndex == 3) {
         // Blue
-        return Displayable::Color(0, 0, 255, 255);
-    } else if (p_colorIndex == 4) {
+        displayableColor = Displayable::Color(0, 0, 255, 255);
+    } else if (colorIndex == 4) {
         // Violet
-        return Displayable::Color(255, 0, 255, 255);
-    } else if (p_colorIndex == 5) {
+        displayableColor = Displayable::Color(255, 0, 255, 255);
+    } else if (colorIndex == 5) {
         // Green
-        return Displayable::Color(0, 255, 0, 255);
-    } else if (p_colorIndex == 6) {
+        displayableColor = Displayable::Color(0, 255, 0, 255);
+    } else if (colorIndex == 6) {
         // Yellow
-        return Displayable::Color(255, 255, 0, 255);
+        displayableColor = Displayable::Color(255, 255, 0, 255);
     }
 
-    return Displayable::Color(0, 0, 0, 0);
+    displayableColor.lighten(lockRatio);
+
+    return displayableColor;
 }

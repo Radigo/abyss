@@ -22,6 +22,13 @@ class Displayable : public GameObject {
             b(p_b),
             a(p_a) {
             }
+
+            /** Multiply all values (except transparency) by p_ratio to add or remove lightness (0 to 1 = darker, 1 to infinity = lighter) */
+            void lighten(const float& p_ratio) {
+                r = static_cast<int>(static_cast<float>(r) * p_ratio);
+                g = static_cast<int>(static_cast<float>(g) * p_ratio);
+                b = static_cast<int>(static_cast<float>(b) * p_ratio);
+            }
         };
         struct DrawablePoint {
             Types::Point point;

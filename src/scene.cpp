@@ -31,9 +31,26 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     TextButton* createTextureWindow = new TextButton(nullptr, "Create texture window", [this](){ createWindow("mnc_arrow.png"); });
     createTextureWindow->setPosition(50, 80);
 
-    Blocks* blocks = new Blocks(10, 20);
-    BlocksView* blocksView = new BlocksView(this, blocks);
-    blocksView->setPosition(400, 10);
+    TextButton* createBlocksWindow = new TextButton(nullptr, "Create Blocks(tm) window", [this](){
+        std::string windowId = "Blocks " + to_string(_windows.size());
+        int width = 220;
+        int height = 440;
+        int randX = rand() % (Scene::sceneWidth - width);
+        int randY = rand() % (Scene::sceneHeight - height);
+
+        Window* window = new Window(windowId, width, height, [this, windowId](){
+            deleteWindow(windowId);
+        });
+
+        Blocks* blocks = new Blocks(10, 20);
+        BlocksView* blocksView = new BlocksView(window, blocks, 20);
+        blocksView->setPosition(10, 30);
+
+        window->setPosition(randX, randY);
+
+        _windows.push_back(window);
+    });
+    createBlocksWindow->setPosition(50, 110);
 
     return true;
 }
@@ -42,8 +59,8 @@ void Scene::createWindow(const std::string p_textureAssetName) {
     std::string windowId = "window" + to_string(_windows.size());
     int randWidth = 100 + rand() % 300;
     int randHeight = 100 + rand() % 300;
-    int randX = rand() % Scene::sceneWidth;
-    int randY = rand() % Scene::sceneHeight;
+    int randX = rand() % (Scene::sceneWidth - randWidth);
+    int randY = rand() % (Scene::sceneHeight - randHeight);
 
     Window* window = new Window(windowId, randWidth, randHeight, [this, windowId](){
         deleteWindow(windowId);

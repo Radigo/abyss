@@ -31,7 +31,8 @@ _state(GameState::SPAWN_TETROMINO),
 _playfield({}),
 _level(0),
 _frameTick(0),
-_dasCounter(0)
+_dasCounter(0),
+_lockCounter(0)
 {
     // ToDo: add a buffer row on top, make sure it's hidden when we want to draw the playfield
     for (int i = 0; i < p_numRows; i++) {
@@ -54,18 +55,19 @@ Blocks::~Blocks() {
 }
 
 // Returns a generic view of the playfield
-std::vector<std::vector<int>> Blocks::getPlayfield() {
-    std::vector<std::vector<int>> playfieldView;
+std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
+    std::vector<std::vector<std::pair<int, float>>> playfieldView;
 
     for (auto row : _playfield) {
-        std::vector<int> rowView;
+        std::vector<std::pair<int, float>> rowView;
         for (auto column : row) {
-            rowView.push_back(column.colorIndex);
+            rowView.push_back(std::make_pair(column.colorIndex, 1.0f));
         }
         playfieldView.push_back(rowView);
     }
 
     // Add active piece to the playfield if it's there
+    const float lockRatio = static_cast<float>(_lockCounter) / static_cast<float>(_getLockDelay(_level));
     if (_activePiece) {
         std::vector<Block> activePieceBlocks = _getBlocks(_activePiece->getType(), _activePiece->getRotation());
         for (size_t i = 0; i < activePieceBlocks.size(); i++) {
@@ -77,7 +79,7 @@ std::vector<std::vector<int>> Blocks::getPlayfield() {
             int blockY = _activePiece->getY() + (i / 4);
             if ((blockY >= 0) && (blockY < _playfield.size())) {
                 if ((blockX >= 0) && (blockX < _playfield.at(blockY).size())) {
-                    playfieldView.at(blockY).at(blockX) = pieceColor;
+                    playfieldView.at(blockY).at(blockX) = std::make_pair(pieceColor, lockRatio);
                 }
             }
         }
@@ -89,7 +91,7 @@ std::vector<std::vector<int>> Blocks::getPlayfield() {
 void Blocks::_updateGame(const double&) {
     _frameTick++;
 
-    int moveState, btnState, dasAtLevel;
+    int moveState, btnState, dasAtLevel, gravity, pieceTotalGravityAvailable;
 
     switch (_state) {
         case SPAWN_TETROMINO:
@@ -124,9 +126,6 @@ void Blocks::_updateGame(const double&) {
                         _activePiece->move(1);
                 }
                 _dasCounter--;
-            } else if (moveState & Controllable::DOWN) {
-                // ToDo: make sure we can't skip 2 rows at once
-                _activePiece->applyGravity(256);// For some reason Blocks::GRAVITY_1_G doesn't work here...
             } else {
                 _dasCounter = dasAtLevel;
             }
@@ -159,20 +158,44 @@ void Blocks::_updateGame(const double&) {
             // Wall kicks
 
             // floor
-            if (_isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY() + 1, _activePiece->getRotation())) {
-                _activePiece->applyGravity(_getGravity(_level));
+            // For some reason GRAVITY_1_G (or Blocks::GRAVITY_1_G) doesn't compile here
+            gravity = _getGravity(_level);
+            if (moveState & Controllable::DOWN) {
+                gravity = std::max(gravity, 256);
+                _lockCounter = 0;// Instant lock in case of collision
+            }
 
-            } else {
-                // ToDo: count lock delay before locking
-                _lockPiece();
-                _activePiece = nullptr;
-                _clearedLines = _clearLines();
-                if (!_clearedLines.empty()) {
-                    _state = GameState::CLEAR_LINE;
-                } else {
-                    _state = GameState::SPAWN_TETROMINO;
+            // The piece will chute by all this amount of gravity
+            pieceTotalGravityAvailable = gravity;
+
+            // We test where the piece will be if it's affected by gravity
+            for (int i = 0; i <= _getRowsByGravity(gravity); i++) {
+                if (!_isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY() + i, _activePiece->getRotation())) {
+                    pieceTotalGravityAvailable = i / 256;
+                    break;
                 }
-                _frameTick = 0;
+            }
+
+            // Move the piece by the available distance
+            _activePiece->applyGravity(pieceTotalGravityAvailable);
+
+            // The piece was interrupted in its chute
+            if (pieceTotalGravityAvailable < gravity) {
+                if (_lockCounter > 0) {
+                    _lockCounter--;
+                } else {
+                    _lockPiece();
+                    _activePiece = nullptr;
+                    _clearedLines = _clearLines();
+                    if (!_clearedLines.empty()) {
+                        _state = GameState::CLEAR_LINE;
+                    } else {
+                        _state = GameState::SPAWN_TETROMINO;
+                    }
+                    _frameTick = 0;
+                }
+            } else {
+                _lockCounter = _getLockDelay(_level);
             }
             break;
         case CLEAR_LINE:
@@ -191,6 +214,7 @@ void Blocks::_updateGame(const double&) {
 }
 
 void Blocks::_pickNextTetromino() {
+    //ToDo: pick next using TGM algorithm
     _nextTetromino = static_cast<TetrominoType>(rand() % 7);
 }
 
@@ -202,8 +226,8 @@ bool Blocks::_isActivePiecePositionValid(const int& p_x, const int& p_y, const i
     std::vector<Block> activePieceBlocks = _getBlocks(_activePiece->getType(), p_rotation);
 
     for (size_t i = 0; i < activePieceBlocks.size(); i++) {
-        //SDL_Log("%zu, %d, %zu, %d, %zu", i, _activePiece->getX(), (i % 4), _activePiece->getY(), (i / 4));
         int pieceColor = activePieceBlocks.at(i).colorIndex;
+        //SDL_Log("%zu, %d;%d, %zu;%zu = %d", i, _activePiece->getX(), _activePiece->getY(), p_x + (i % 4), p_y + (i / 4), pieceColor);
         if (pieceColor < 0) // Ignore empty cells
             continue;
         int blockX = p_x + (i % 4);
@@ -226,7 +250,7 @@ void Blocks::_lockPiece() {
 
     for (size_t i = 0; i < activePieceBlocks.size(); i++) {
         int pieceColor = activePieceBlocks.at(i).colorIndex;
-        SDL_Log("%zu, %d, %zu, %d, %zu = %d", i, _activePiece->getX(), (i % 4), _activePiece->getY(), (i / 4), pieceColor);
+        //SDL_Log("%zu, %d, %zu, %d, %zu = %d", i, _activePiece->getX(), (i % 4), _activePiece->getY(), (i / 4), pieceColor);
         if (pieceColor < 0) // Ignore empty cells
             continue;
         int blockX = _activePiece->getX() + (i % 4);

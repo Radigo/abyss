@@ -71,6 +71,7 @@ class Blocks : public GameObject {
         TetrominoType _nextTetromino;
 
         int _dasCounter;// Delayed Auto Shift (holding direction)
+        int _lockCounter;// Lock delay
         bool _btnIsReleased[3];
         std::vector<size_t> _clearedLines;
 
@@ -82,7 +83,7 @@ class Blocks : public GameObject {
         Blocks(const int& p_numColumns, const int& p_numRows);
         ~Blocks();
 
-        std::vector<std::vector<int>> getPlayfield();
+        std::vector<std::vector<std::pair<int, float>>> getPlayfield();
 
         inline int getLevel() { return _level; }
         inline int getState() { return _state; }
@@ -149,6 +150,11 @@ class Blocks : public GameObject {
             else if (p_level >= 35) return 8;
             else if (p_level >= 30) return 6;
             else return 4;
+        }
+
+        /** Returns the number of rows travelled by a given amount of gravity */
+        inline int _getRowsByGravity(const int& p_gravity) {
+            return static_cast<int>(std::ceil(static_cast<float>(p_gravity) / static_cast<float>(256)));
         }
 
         inline std::vector<Block> _getBlocks(const TetrominoType& p_type, const int& p_rotation) {
