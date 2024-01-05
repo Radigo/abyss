@@ -17,10 +17,6 @@ _game(p_game)
     _parent = p_parent;
 
     _display = new Displayable(this);
-    _debugTf = new Displayable(this);
-    _tfIndex = _debugTf->addTexture(Renderer::createDisplayableText("0000000000", Types::getFont(Types::Fonts::Regular)));
-    _debugTf->setPosition(0, 20 * _cellSize);
-
     _updater = new Updatable(this, [this](const double& p_deltaTime){ _drawPlayfield(); });
 }
 
@@ -42,22 +38,6 @@ void BlocksView::_drawPlayfield() {
             _display->addRectangle(colIdx * _cellSize, rowIdx * _cellSize, _cellSize, _cellSize, Displayable::Color(255, 255, 255, 32), cellColor);
         }
     }
-
-    // Debug display
-    std:string message = "level: " + to_string(_game->getLevel());
-    message += ", frame: " + to_string(_game->getFrameTick());
-    message += ", state: ";
-    int gameState = _game->getState();
-    if (gameState == 0) {// SPAWN_TETROMINO
-        message += "SPAWN";
-    } else if (gameState == 1) {// MOVE_TETROMINO
-        message += "MOVE";
-    } else if (gameState == 2) {// CLEAR_LINE
-        message += "CLEAR";
-    } else if (gameState == 3) {// GAME_OVER
-        message += "GAME OVER";
-    }
-    _debugTf->updateTexture(_tfIndex, Renderer::createDisplayableText(message, Types::getFont(Types::Fonts::Regular)));
 }
 
 Displayable::Color BlocksView::_getBlockColor(const std::pair<int, float>& p_colorIndex) {

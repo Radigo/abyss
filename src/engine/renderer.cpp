@@ -94,7 +94,7 @@ Displayable::DisplayableTexture Renderer::createDisplayableTexture(const std::st
     return texture;
 }
 
-Displayable::DisplayableTexture Renderer::createDisplayableText(const std::string& p_content, const Types::DisplayableFont& p_font) {
+Displayable::DisplayableTexture Renderer::createDisplayableText(const std::string& p_content, const Types::DisplayableFont& p_font, const Displayable::Color& p_color) {
 	//Open the font
     std::string fontName = Globals::ASSETS_PATH + p_font.fontName;
 	TTF_Font *font = TTF_OpenFont(fontName.c_str(), p_font.fontSize);
@@ -104,7 +104,8 @@ Displayable::DisplayableTexture Renderer::createDisplayableText(const std::strin
 	}	
 	//We need to first render to a surface as that's what TTF_RenderText
 	//returns, then load that surface into a texture
-	SDL_Surface *surface = TTF_RenderText_Blended(font, p_content.c_str(), {255, 255, 255, 255});
+    SDL_Color tfColor = {static_cast<Uint8>(p_color.r), static_cast<Uint8>(p_color.g), static_cast<Uint8>(p_color.b), static_cast<Uint8>(p_color.a)};
+	SDL_Surface *surface = TTF_RenderText_Blended(font, p_content.c_str(), tfColor);
     if (!surface) {
 		TTF_CloseFont(font);
 		SDL_Log("TTF_RenderText_Blended failed");

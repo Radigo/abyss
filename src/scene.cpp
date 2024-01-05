@@ -7,6 +7,7 @@
 #include "ui/textbutton.hpp"
 #include "game/blocks.hpp"
 #include "game/blocksview.hpp"
+#include "game/blocksdataview.hpp"
 
 #include <time.h> // For rand only, try a fixed seed
 
@@ -33,7 +34,7 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
 
     TextButton* createBlocksWindow = new TextButton(nullptr, "Create Blocks(tm) window", [this](){
         std::string windowId = "Blocks " + to_string(_windows.size());
-        int width = 220;
+        int width = 320;
         int height = 440;
         int randX = rand() % (Scene::sceneWidth - width);
         int randY = rand() % (Scene::sceneHeight - height);
@@ -45,6 +46,8 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
         Blocks* blocks = new Blocks(10, 20);
         BlocksView* blocksView = new BlocksView(window, blocks, 20);
         blocksView->setPosition(10, 30);
+        BlocksDataView* blocksDataView = new BlocksDataView(window, blocks);
+        blocksDataView->setPosition(220, 30);
 
         window->setPosition(randX, randY);
 

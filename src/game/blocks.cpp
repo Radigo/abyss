@@ -35,7 +35,7 @@ _dasCounter(0),
 _lockCounter(0)
 {
     // ToDo: add a buffer row on top, make sure it's hidden when we want to draw the playfield
-    for (int i = 0; i < p_numRows; i++) {
+    for (int i = 0; i < BUFFER_ROWS + p_numRows; i++) {
         std::vector<Block> row = {};
         for (int j = 0; j < p_numColumns; j++) {
             row.emplace_back(Block(-1));
@@ -58,9 +58,10 @@ Blocks::~Blocks() {
 std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
     std::vector<std::vector<std::pair<int, float>>> playfieldView;
 
-    for (auto row : _playfield) {
+    // Start after BUFFER_ROWS
+    for (size_t rowIdx = BUFFER_ROWS; rowIdx < _playfield.size(); rowIdx++) {
         std::vector<std::pair<int, float>> rowView;
-        for (auto column : row) {
+        for (auto column : _playfield.at(rowIdx)) {
             rowView.push_back(std::make_pair(column.colorIndex, 1.0f));
         }
         playfieldView.push_back(rowView);
@@ -76,7 +77,7 @@ std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
             if (pieceColor < 0) // Ignore empty cells
                 continue;
             int blockX = _activePiece->getX() + (i % 4);
-            int blockY = _activePiece->getY() + (i / 4);
+            int blockY = _activePiece->getY() + (i / 4) - BUFFER_ROWS;
             if ((blockY >= 0) && (blockY < _playfield.size())) {
                 if ((blockX >= 0) && (blockX < _playfield.at(blockY).size())) {
                     playfieldView.at(blockY).at(blockX) = std::make_pair(pieceColor, lockRatio);
@@ -86,6 +87,28 @@ std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
     }
 
     return playfieldView;
+}
+
+// Returns a generic representation of the next piece
+std::string Blocks::getNextStr() {
+    switch (_nextTetromino) {
+        case I:
+            return "I";
+        case O:
+            return "O";
+        case S:
+            return "S";
+        case Z:
+            return "Z";
+        case J:
+            return "J";
+        case L:
+            return "L";
+        case T:
+            return "T";
+    }
+
+    return "";
 }
 
 void Blocks::_updateGame(const double&) {
@@ -101,7 +124,15 @@ void Blocks::_updateGame(const double&) {
             if (_frameTick >= _getAre(_level)) {
                 // Spawn piece at correct location on the playfield (create the Tetromino* object)
                 // ToDo: implement IRS
+                // ToDo: implement DAS buffer
                 _activePiece = new Tetromino(_nextTetromino, _getSpawnX(), 0, 0);
+                // GAME OVER if active piece spawns at invalid position
+                if (!_isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation())) {
+                    _lockPiece();
+                    _activePiece = nullptr;
+                    _state = GAME_OVER;
+                    return;
+                }
                 _state = GameState::MOVE_TETROMINO;
                 _frameTick = 0;
                 // Select the next piece
@@ -185,8 +216,12 @@ void Blocks::_updateGame(const double&) {
                     _lockCounter--;
                 } else {
                     _lockPiece();
+                    if ((_level == 0) || (_level % 100) != 0) {
+                        _level++;
+                    }
                     _activePiece = nullptr;
                     _clearedLines = _clearLines();
+                    _level += _clearedLines.size();
                     if (!_clearedLines.empty()) {
                         _state = GameState::CLEAR_LINE;
                     } else {

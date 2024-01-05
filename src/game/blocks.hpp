@@ -18,7 +18,8 @@ class Controllable;
 
 class Blocks : public GameObject {
     private:
-        static const int GRAVITY_1_G = 256;
+        static const int BUFFER_ROWS = 1;   // How many rows are hiden over the playfield
+        static const int GRAVITY_1_G = 256; // 1G in gravity units
 
         enum GameState {
             SPAWN_TETROMINO,    // We pick a piece and place it on the playfield (includes ARE)
@@ -34,7 +35,7 @@ class Blocks : public GameObject {
         };
 
         enum TetrominoType {
-            I, O, S, Z, J, L, T
+            I, T, L, J, S, Z, O
         };
 
         struct Tetromino {
@@ -84,6 +85,7 @@ class Blocks : public GameObject {
         ~Blocks();
 
         std::vector<std::vector<std::pair<int, float>>> getPlayfield();
+        std::string getNextStr();
 
         inline int getLevel() { return _level; }
         inline int getState() { return _state; }

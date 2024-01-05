@@ -35,7 +35,7 @@ class Renderer {
         }
 
         static Displayable::DisplayableTexture createDisplayableTexture(const std::string& p_assetName);
-        static Displayable::DisplayableTexture createDisplayableText(const std::string& p_content, const Types::DisplayableFont& p_font);
+        static Displayable::DisplayableTexture createDisplayableText(const std::string& p_content, const Types::DisplayableFont& p_font, const Displayable::Color& p_color = {255, 255, 255, 255});
 
         void update(const double& p_deltaTime);
 
