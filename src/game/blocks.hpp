@@ -71,6 +71,7 @@ class Blocks : public GameObject {
         int _frameTick;// Our main internal time counter for each state
         TetrominoType _nextTetromino;
 
+        int _irsRotation;// Initial rotation value
         int _dasCounter;// Delayed Auto Shift (holding direction)
         int _lockCounter;// Lock delay
         bool _btnIsReleased[3];
@@ -87,6 +88,7 @@ class Blocks : public GameObject {
         std::vector<std::vector<std::pair<int, float>>> getPlayfield();
         std::string getNextStr();
 
+        inline void setLevel(const int p_level) { _level = p_level; }
         inline int getLevel() { return _level; }
         inline int getState() { return _state; }
         inline int getFrameTick() { return _frameTick; }

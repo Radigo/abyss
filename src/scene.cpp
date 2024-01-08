@@ -26,34 +26,17 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     _fpsCounter = new FpsCounter(nullptr);
     _controlTester = new ControlTester(nullptr);
 
-    TextButton* createEmptyWindow = new TextButton(nullptr, "Create empty window", [this](){ createWindow(); });
-    createEmptyWindow->setPosition(50, 50);
+    TextButton* createEmptyWindowBtn = new TextButton(nullptr, "Create empty window", [this](){ createWindow(); });
+    createEmptyWindowBtn->setPosition(50, 50);
 
-    TextButton* createTextureWindow = new TextButton(nullptr, "Create texture window", [this](){ createWindow("mnc_arrow.png"); });
-    createTextureWindow->setPosition(50, 80);
+    TextButton* createTextureWindowBtn = new TextButton(nullptr, "Create texture window", [this](){ createWindow("mnc_arrow.png"); });
+    createTextureWindowBtn->setPosition(50, 80);
 
-    TextButton* createBlocksWindow = new TextButton(nullptr, "Create Blocks(tm) window", [this](){
-        std::string windowId = "Blocks " + to_string(_windows.size());
-        int width = 320;
-        int height = 440;
-        int randX = rand() % (Scene::sceneWidth - width);
-        int randY = rand() % (Scene::sceneHeight - height);
+    TextButton* createBlocksWindowBtn = new TextButton(nullptr, "Create Blocks(tm) window", [this](){ createBlocksWindow(0); });
+    createBlocksWindowBtn->setPosition(50, 110);
 
-        Window* window = new Window(windowId, width, height, [this, windowId](){
-            deleteWindow(windowId);
-        });
-
-        Blocks* blocks = new Blocks(10, 20);
-        BlocksView* blocksView = new BlocksView(window, blocks, 20);
-        blocksView->setPosition(10, 30);
-        BlocksDataView* blocksDataView = new BlocksDataView(window, blocks);
-        blocksDataView->setPosition(220, 30);
-
-        window->setPosition(randX, randY);
-
-        _windows.push_back(window);
-    });
-    createBlocksWindow->setPosition(50, 110);
+    TextButton* createBlocksLvl500WindowBtn = new TextButton(nullptr, "Create Blocks(tm) window", [this](){ createBlocksWindow(500); });
+    createBlocksLvl500WindowBtn->setPosition(50, 130);
 
     return true;
 }
@@ -75,6 +58,30 @@ void Scene::createWindow(const std::string p_textureAssetName) {
         texture->addTexture(Renderer::createDisplayableTexture(p_textureAssetName.c_str()));
         texture->setPosition(10, 30);
     }
+
+    _windows.push_back(window);
+}
+
+void Scene::createBlocksWindow(const int p_startLevel) {
+    std::string windowId = "Blocks " + to_string(_windows.size());
+    int width = 320;
+    int height = 440;
+    int randX = rand() % (Scene::sceneWidth - width);
+    int randY = rand() % (Scene::sceneHeight - height);
+
+    Window* window = new Window(windowId, width, height, [this, windowId](){
+        deleteWindow(windowId);
+    });
+
+    Blocks* blocks = new Blocks(10, 20);
+    blocks->setLevel(p_startLevel);
+
+    BlocksView* blocksView = new BlocksView(window, blocks, 20);
+    blocksView->setPosition(10, 30);
+    BlocksDataView* blocksDataView = new BlocksDataView(window, blocks);
+    blocksDataView->setPosition(220, 30);
+
+    window->setPosition(randX, randY);
 
     _windows.push_back(window);
 }

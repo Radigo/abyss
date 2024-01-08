@@ -10,12 +10,12 @@
 
 void Blocks::Tetromino::applyGravity(const int& p_gravity) {
     _gravityTick += p_gravity;
-    if (_gravityTick < Blocks::GRAVITY_1_G)
-        return;
-    
-    // We move down by 1G
-    _gravityTick -= Blocks::GRAVITY_1_G;
-    _y+=1;
+
+    // We move down by how much Gs in gravity
+    while (_gravityTick >= Blocks::GRAVITY_1_G) {
+        _gravityTick -= Blocks::GRAVITY_1_G;
+        _y+=1;
+    }
 }
 
 void Blocks::Tetromino::move(const int& p_direction) {
@@ -34,7 +34,6 @@ _frameTick(0),
 _dasCounter(0),
 _lockCounter(0)
 {
-    // ToDo: add a buffer row on top, make sure it's hidden when we want to draw the playfield
     for (int i = 0; i < BUFFER_ROWS + p_numRows; i++) {
         std::vector<Block> row = {};
         for (int j = 0; j < p_numColumns; j++) {
@@ -114,18 +113,40 @@ std::string Blocks::getNextStr() {
 void Blocks::_updateGame(const double&) {
     _frameTick++;
 
-    int moveState, btnState, dasAtLevel, gravity, pieceTotalGravityAvailable;
+    int moveState, btnState, gravity, pieceTotalGravityAvailable;
 
     switch (_state) {
         case SPAWN_TETROMINO:
-            // We pick a piece and place it on the playfield (includes ARE)
-
-            // Wait for ARE (prepare IRS)
-            if (_frameTick >= _getAre(_level)) {
+            // We pick a piece and place it on the playfield
+            // Wait for ARE
+            if (_frameTick < _getAre(_level)) {
+                // DAS buffer
+                if (moveState & Controllable::LEFT) {
+                    _dasCounter--;
+                } else if (moveState & Controllable::RIGHT) {
+                    _dasCounter--;
+                } else {
+                    _dasCounter = _getDas(_level);
+                }
+                // IRS
+                if (btnState & Controllable::BTN_A) {
+                    _irsRotation = -1;
+                    _btnIsReleased[0] = false;
+                } else if (btnState & Controllable::BTN_B) {
+                    _irsRotation = 1;
+                    _btnIsReleased[1] = false;
+                } else if (btnState & Controllable::BTN_C) {
+                    _irsRotation = -1;
+                    _btnIsReleased[2] = false;
+                } else {
+                    _irsRotation = 0;
+                    _btnIsReleased[0] = true;
+                    _btnIsReleased[1] = true;
+                    _btnIsReleased[2] = true;
+                }
+            } else {
                 // Spawn piece at correct location on the playfield (create the Tetromino* object)
-                // ToDo: implement IRS
-                // ToDo: implement DAS buffer
-                _activePiece = new Tetromino(_nextTetromino, _getSpawnX(), 0, 0);
+                _activePiece = new Tetromino(_nextTetromino, _getSpawnX(), 0, _irsRotation);
                 // GAME OVER if active piece spawns at invalid position
                 if (!_isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation())) {
                     _lockPiece();
@@ -135,6 +156,7 @@ void Blocks::_updateGame(const double&) {
                 }
                 _state = GameState::MOVE_TETROMINO;
                 _frameTick = 0;
+                _lockCounter = _getLockDelay(_level);
                 // Select the next piece
                 _pickNextTetromino();
             }
@@ -143,22 +165,21 @@ void Blocks::_updateGame(const double&) {
             // The gravity applies, we control the piece (includes lock delay)
             moveState = _input->getMoveState();
             btnState = _input->getButtonState();
-            dasAtLevel = _getDas(_level);
 
             if (moveState & Controllable::LEFT) {
-                if ((_dasCounter == dasAtLevel) || (_dasCounter <= 0)) {
+                if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
                     if (_isActivePiecePositionValid(_activePiece->getX() - 1, _activePiece->getY(), _activePiece->getRotation()))
                         _activePiece->move(-1);
                 }
                 _dasCounter--;
             } else if (moveState & Controllable::RIGHT) {
-                if ((_dasCounter == dasAtLevel) || (_dasCounter <= 0)) {
+                if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
                     if (_isActivePiecePositionValid(_activePiece->getX() + 1, _activePiece->getY(), _activePiece->getRotation()))
                         _activePiece->move(1);
                 }
                 _dasCounter--;
             } else {
-                _dasCounter = dasAtLevel;
+                _dasCounter = _getDas(_level);
             }
 
             if (btnState & Controllable::BTN_A) {
@@ -202,7 +223,7 @@ void Blocks::_updateGame(const double&) {
             // We test where the piece will be if it's affected by gravity
             for (int i = 0; i <= _getRowsByGravity(gravity); i++) {
                 if (!_isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY() + i, _activePiece->getRotation())) {
-                    pieceTotalGravityAvailable = i / 256;
+                    pieceTotalGravityAvailable = (i - 1) * 256;
                     break;
                 }
             }
@@ -262,7 +283,7 @@ bool Blocks::_isActivePiecePositionValid(const int& p_x, const int& p_y, const i
 
     for (size_t i = 0; i < activePieceBlocks.size(); i++) {
         int pieceColor = activePieceBlocks.at(i).colorIndex;
-        //SDL_Log("%zu, %d;%d, %zu;%zu = %d", i, _activePiece->getX(), _activePiece->getY(), p_x + (i % 4), p_y + (i / 4), pieceColor);
+        SDL_Log("%zu, %d;%d, %zu;%zu = %d", i, _activePiece->getX(), _activePiece->getY(), p_x + (i % 4), p_y + (i / 4), pieceColor);
         if (pieceColor < 0) // Ignore empty cells
             continue;
         int blockX = p_x + (i % 4);
@@ -271,10 +292,13 @@ bool Blocks::_isActivePiecePositionValid(const int& p_x, const int& p_y, const i
             || (blockY >= _playfield.size())
             || (blockX < 0)
             || (blockX >= _playfield.at(blockY).size())) {
+                SDL_Log("> OOB!");
                 return false;
         }
-        if (_playfield.at(blockY).at(blockX).colorIndex >= 0)
+        if (_playfield.at(blockY).at(blockX).colorIndex >= 0) {
+            SDL_Log("> block collision!");
             return false;
+        }
     }
 
     return true;
