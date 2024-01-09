@@ -1,5 +1,6 @@
 #include "blocks.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
@@ -28,11 +29,18 @@ void Blocks::Tetromino::rotate(const int& p_direction) {
 
 Blocks::Blocks(const int& p_numColumns, const int& p_numRows) :
 _state(GameState::SPAWN_TETROMINO),
-_playfield({}),
 _level(0),
+_playfield({}),
+_nextTetromino(TetrominoType::I),
+_activePiece(nullptr),
+_clearedLines(0),
 _frameTick(0),
+_irsRotation(0),
 _dasCounter(0),
-_lockCounter(0)
+_lockCounter(0),
+_history({}),
+_updater(nullptr),
+_input(nullptr)
 {
     for (int i = 0; i < BUFFER_ROWS + p_numRows; i++) {
         std::vector<Block> row = {};
@@ -45,7 +53,7 @@ _lockCounter(0)
     _updater = new Updatable(this, [this](const double& p_frameDeltaTime){ _updateGame(p_frameDeltaTime); });
     _input = new Controllable(this);
 
-    _pickNextTetromino();
+    _nextTetromino = _pickNextTetromino(true);
 }
 
 Blocks::~Blocks() {
@@ -158,7 +166,7 @@ void Blocks::_updateGame(const double&) {
                 _frameTick = 0;
                 _lockCounter = _getLockDelay(_level);
                 // Select the next piece
-                _pickNextTetromino();
+                _nextTetromino = _pickNextTetromino(false);
             }
             break;
         case MOVE_TETROMINO:
@@ -269,9 +277,38 @@ void Blocks::_updateGame(const double&) {
     }
 }
 
-void Blocks::_pickNextTetromino() {
-    //ToDo: pick next using TGM algorithm
-    _nextTetromino = static_cast<TetrominoType>(rand() % 7);
+Blocks::TetrominoType Blocks::_pickNextTetromino(bool p_firstDraw) {
+    // Follow https://tetris.wiki/TGM_randomizer
+
+    // Init
+    // Initiate history with 4 Z
+    if (p_firstDraw) {
+        _history.clear();
+        _history.push_back(TetrominoType::Z);
+        _history.push_back(TetrominoType::Z);
+        _history.push_back(TetrominoType::Z);
+        _history.push_back(TetrominoType::Z);
+    }
+    // Don't pick S, Z or O as first piece
+    int sampleSize = (p_firstDraw) ? 4 : 7;
+
+    // Keep a history of the last 4 pieces
+    // Pick randomly among the 7 pieces
+    // If next is in history, try again (4 times)
+    TetrominoType next = _history.back();
+    size_t retry = 0;
+    size_t numRetries = 4;// TGM1 rule
+
+    while (std::find(_history.begin(), _history.end(), next) != _history.end() && retry <= numRetries) {
+        next = static_cast<TetrominoType>(rand() % sampleSize);
+        retry++;
+    }
+
+    // Update history
+    _history.erase(_history.begin());
+    _history.push_back(next);
+
+    return next;
 }
 
 int Blocks::_getSpawnX() {

@@ -66,18 +66,20 @@ class Blocks : public GameObject {
         };
 
         GameState _state;
-        std::vector<std::vector<Block>> _playfield;
         int _level;
-        int _frameTick;// Our main internal time counter for each state
-        TetrominoType _nextTetromino;
 
+        std::vector<std::vector<Block>> _playfield;
+        TetrominoType _nextTetromino;
+        Tetromino* _activePiece;
+        std::vector<size_t> _clearedLines;
+
+        int _frameTick;// Our main internal time counter for each state
         int _irsRotation;// Initial rotation value
         int _dasCounter;// Delayed Auto Shift (holding direction)
         int _lockCounter;// Lock delay
         bool _btnIsReleased[3];
-        std::vector<size_t> _clearedLines;
+        std::vector<TetrominoType> _history;
 
-        Tetromino* _activePiece;
         Updatable* _updater;
         Controllable* _input;
 
@@ -95,7 +97,7 @@ class Blocks : public GameObject {
 
     private:
         void _updateGame(const double& p_frameDeltaTime);
-        void _pickNextTetromino();
+        TetrominoType _pickNextTetromino(bool p_firstDraw);
         int _getSpawnX();
         bool _isActivePiecePositionValid(const int& p_x, const int& p_y, const int& p_rotation);
         void _lockPiece();
