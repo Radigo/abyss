@@ -11,11 +11,10 @@
 #include "SDL2/SDL_log.h"
 
 BlocksView::BlocksView(GameObject* p_parent, Blocks* p_game, const int& p_cellSize) :
+GameObject(p_parent),
 _cellSize(p_cellSize),
 _game(p_game)
 {
-    _parent = p_parent;
-
     _display = new Displayable(this);
     _updater = new Updatable(this, [this](const double& p_deltaTime){ _drawPlayfield(); });
 }

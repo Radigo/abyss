@@ -2,9 +2,11 @@
 
 #include <SDL2/SDL_log.h>
 
+#include "engine/gameobject.hpp"
 #include "input.hpp"
 
 Controllable::Controllable(GameObject* p_parent) :
+GameObject(p_parent),
 _hitbox(0, 0, -1, -1),
 _isDownInside(false),
 _moveState(0u),
@@ -15,12 +17,9 @@ _onDragCallback(nullptr)
 {
     size_t numControllables = Input::addControllable(this);
     _id = "Controllable" + std::to_string(numControllables);
-    _parent = p_parent;
 }
 
 Controllable::~Controllable() {
-    SDL_Log("<Controllable::~Controllable> %s", getId().c_str());
-    
     _onClickCallback = nullptr;
     _onMouseButtonDownCallback = nullptr;
     _onDragCallback = nullptr;

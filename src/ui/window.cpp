@@ -6,7 +6,9 @@
 
 #include <SDL2/SDL_log.h>
 
-Window::Window(std::string p_id, const int p_width, const int p_height, std::function<void()> p_onCloseCallback) {
+Window::Window(std::string p_id, const int p_width, const int p_height, std::function<void()> p_onCloseCallback) :
+GameObject(nullptr)
+{
     _id = p_id;
     
     _display = new Displayable(this);
@@ -34,7 +36,4 @@ Window::Window(std::string p_id, const int p_width, const int p_height, std::fun
 }
 
 Window::~Window() {
-    delete(_display);
-    delete(_closeButton);
-    delete(_dragArea);
 }

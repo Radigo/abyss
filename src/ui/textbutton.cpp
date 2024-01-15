@@ -4,8 +4,10 @@
 #include "engine/displayable.hpp"
 #include "engine/renderer.hpp"
 
-TextButton::TextButton(GameObject* p_parent, const std::string& p_content, std::function<void()> p_callback) {
-    _parent = p_parent;
+TextButton::TextButton(GameObject* p_parent, const std::string& p_content, std::function<void()> p_callback) :
+GameObject(p_parent)
+{
+    _id = "textButton";
 
     Displayable::DisplayableTexture label = Renderer::createDisplayableText(p_content, Types::getFont(Types::Fonts::Regular));
 
@@ -22,6 +24,4 @@ TextButton::TextButton(GameObject* p_parent, const std::string& p_content, std::
 }
 
 TextButton::~TextButton() {
-    delete(_display);
-    delete(_control);
 }

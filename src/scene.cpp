@@ -16,6 +16,12 @@
 int Scene::sceneWidth = 0;
 int Scene::sceneHeight = 0;
 
+Scene::Scene() :
+GameObject(nullptr)
+{
+    
+}
+
 bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     Scene::sceneWidth = p_sceneWidth;
     Scene::sceneHeight = p_sceneHeight;
@@ -32,11 +38,22 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     TextButton* createTextureWindowBtn = new TextButton(nullptr, "Create texture window", [this](){ createWindow("mnc_arrow.png"); });
     createTextureWindowBtn->setPosition(50, 80);
 
-    TextButton* createBlocksWindowBtn = new TextButton(nullptr, "Create Blocks(tm) window", [this](){ createBlocksWindow(0); });
-    createBlocksWindowBtn->setPosition(50, 110);
+    TextButton* createBlocksTGMWindowBtn = new TextButton(nullptr, "Blocks(tm) TGM", [this](){ createBlocksWindow(1, 0, 10, 20); });
+    createBlocksTGMWindowBtn->setPosition(50, 110);
 
-    TextButton* createBlocksLvl500WindowBtn = new TextButton(nullptr, "Create Blocks(tm) window", [this](){ createBlocksWindow(500); });
-    createBlocksLvl500WindowBtn->setPosition(50, 130);
+    TextButton* createBlocksTAPWindowBtn = new TextButton(nullptr, "Blocks(tm) TAP", [this](){ createBlocksWindow(2, 0, 10, 20); });
+    createBlocksTAPWindowBtn->setPosition(50, 130);
+
+    TextButton* createBlocksLvl500WindowBtn = new TextButton(nullptr, "20G Blocks(tm) window", [this](){ createBlocksWindow(2, 500, 10, 20); });
+    createBlocksLvl500WindowBtn->setPosition(50, 150);
+
+    TextButton* createBlocksRandWindowBtn = new TextButton(nullptr, "Random size Blocks(tm) window", [this](){
+        int version = 1 + rand() % 2;
+        int numColumns = 5 + rand() % 30;
+        int numRows = 10 + rand() % 60;
+        createBlocksWindow(version, 0, numColumns, numRows);
+    });
+    createBlocksRandWindowBtn->setPosition(50, 170);
 
     return true;
 }
@@ -62,10 +79,12 @@ void Scene::createWindow(const std::string p_textureAssetName) {
     _windows.push_back(window);
 }
 
-void Scene::createBlocksWindow(const int p_startLevel) {
+void Scene::createBlocksWindow(const int p_version, const int p_startLevel, const int p_numColumns, const int p_numRows) {
     std::string windowId = "Blocks " + to_string(_windows.size());
-    int width = 320;
-    int height = 440;
+    int cellSize = 16;
+    int width = cellSize * p_numColumns + 100;
+    int height = cellSize * p_numRows + 36;
+    int dataViewX = cellSize * p_numColumns + 20;
     int randX = rand() % (Scene::sceneWidth - width);
     int randY = rand() % (Scene::sceneHeight - height);
 
@@ -73,13 +92,13 @@ void Scene::createBlocksWindow(const int p_startLevel) {
         deleteWindow(windowId);
     });
 
-    Blocks* blocks = new Blocks(10, 20);
+    Blocks* blocks = new Blocks(p_version, p_numColumns, p_numRows);
     blocks->setLevel(p_startLevel);
 
-    BlocksView* blocksView = new BlocksView(window, blocks, 20);
+    BlocksView* blocksView = new BlocksView(window, blocks, cellSize);
     blocksView->setPosition(10, 30);
     BlocksDataView* blocksDataView = new BlocksDataView(window, blocks);
-    blocksDataView->setPosition(220, 30);
+    blocksDataView->setPosition(dataViewX, 30);
 
     window->setPosition(randX, randY);
 

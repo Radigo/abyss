@@ -16,6 +16,8 @@ using namespace std;
 
 class Scene : public GameObject {
     public:
+        Scene();
+        ~Scene() {};
         static int sceneWidth;
         static int sceneHeight;
 
@@ -25,7 +27,7 @@ class Scene : public GameObject {
         std::vector<Window*> _windows;
 
         void createWindow(const std::string p_textureAssetName = "");
-        void createBlocksWindow(const int p_startLevel);
+        void createBlocksWindow(const int p_version, const int p_startLevel, const int p_numColumns, const int p_numRows);
         void deleteWindow(const std::string p_id);
 
     public:

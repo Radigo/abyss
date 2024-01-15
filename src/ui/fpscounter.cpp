@@ -7,8 +7,10 @@
 #include "engine/updatable.hpp"
 #include "engine/renderer.hpp"
 
-FpsCounter::FpsCounter(GameObject* p_parent) {
-    _parent = p_parent;
+FpsCounter::FpsCounter(GameObject* p_parent) :
+GameObject(p_parent)
+{
+    _id = "fpsCounter";
 
     _display = new Displayable(this);
     _display->addRectangle(0, 0, 100, 20, Displayable::Color(0, 0, 0, 0), Displayable::Color(0, 0, 0, 64));
@@ -20,7 +22,6 @@ FpsCounter::FpsCounter(GameObject* p_parent) {
 }
 
 FpsCounter::~FpsCounter() {
-    delete(_display);
 }
 
 void FpsCounter::_updateCounter(const double& p_deltaTime) {

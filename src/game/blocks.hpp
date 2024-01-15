@@ -65,8 +65,9 @@ class Blocks : public GameObject {
                 int _gravityTick;
         };
 
+        size_t _version;// 1 (TGM) or 2 (TAP)
         GameState _state;
-        int _level;
+        size_t _level;
 
         std::vector<std::vector<Block>> _playfield;
         TetrominoType _nextTetromino;
@@ -84,7 +85,7 @@ class Blocks : public GameObject {
         Controllable* _input;
 
     public:
-        Blocks(const int& p_numColumns, const int& p_numRows);
+        Blocks(const size_t& p_version = 1, const int& p_numColumns = 10, const int& p_numRows = 20);
         ~Blocks();
 
         std::vector<std::vector<std::pair<int, float>>> getPlayfield();
@@ -104,28 +105,78 @@ class Blocks : public GameObject {
         std::vector<size_t> _clearLines();
         void _reorganizePlayfieldAfterLineClear();
 
-        inline int _getAre(const int&) {
+        inline int _getAre(const int& p_level, bool p_noLineCleared) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
+            if (_version == 2) {
+                // TAP
+                if (p_noLineCleared) {
+                    if (p_level >= 900) return 14;
+                    else if (p_level >= 800) return 14;
+                    else if (p_level >= 700) return 18;
+                    else if (p_level >= 600) return 27;
+                    else if (p_level >= 500) return 27;
+                    else return 27;
+                } else {
+                    if (p_level >= 900) return 8;
+                    else if (p_level >= 800) return 8;
+                    else if (p_level >= 700) return 14;
+                    else if (p_level >= 600) return 18;
+                    else if (p_level >= 500) return 27;
+                    else return 27;
+                }
+            }
+            // TGM
             return 30;
         }
         
-        inline int _getDas(const int&) {
+        inline int _getDas(const int& p_level) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
+            if (_version == 2) {
+                // TAP
+                if (p_level >= 900) return 8;
+                else if (p_level >= 800) return 10;
+                else if (p_level >= 700) return 10;
+                else if (p_level >= 600) return 10;
+                else if (p_level >= 500) return 10;
+                else return 16;
+            }
+            // TGM
             return 16;
         }
         
-        inline int _getLockDelay(const int&) {
+        inline int _getLockDelay(const int& p_level) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
+            if (_version == 2) {
+                // TAP
+                if (p_level >= 900) return 17;
+                    else if (p_level >= 800) return 30;
+                    else if (p_level >= 700) return 30;
+                    else if (p_level >= 600) return 30;
+                    else if (p_level >= 500) return 30;
+                    else return 30;
+            }
+            // TGM
             return 30;
         }
         
-        inline int _getLineClear(const int&) {
+        inline int _getLineClear(const int& p_level) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
+            if (_version == 2) {
+                // TAP
+                if (p_level >= 900) return 6;
+                else if (p_level >= 800) return 6;
+                else if (p_level >= 700) return 12;
+                else if (p_level >= 600) return 16;
+                else if (p_level >= 500) return 25;
+                else return 40;
+            }
+            // TGM
             return 41;
         }
         
         inline int _getGravity(const int& p_level) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
+            // Same for TGM and TAP
             if (p_level >= 500) return GRAVITY_1_G * 20;// 20G
             else if (p_level >= 450) return GRAVITY_1_G * 3;// 3G
             else if (p_level >= 420) return GRAVITY_1_G * 4;// 4G

@@ -3,8 +3,10 @@
 #include "engine/controllable.hpp"
 #include "engine/displayable.hpp"
 
-CloseButton::CloseButton(GameObject* p_parent, const int p_size, std::function<void()> p_callback) {
-    _parent = p_parent;
+CloseButton::CloseButton(GameObject* p_parent, const int p_size, std::function<void()> p_callback) :
+GameObject(p_parent)
+{
+    _id = "CloseButton";
 
     _display = new Displayable(this);
     _display->addRectangle(-p_size * 0.5f, -p_size * 0.5f, p_size, p_size, Displayable::Color(255, 255, 255, 255), Displayable::Color(255, 255, 255, 64));
@@ -17,6 +19,4 @@ CloseButton::CloseButton(GameObject* p_parent, const int p_size, std::function<v
 }
 
 CloseButton::~CloseButton() {
-    delete(_display);
-    delete(_control);
 }

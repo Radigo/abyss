@@ -11,10 +11,9 @@
 #include "SDL2/SDL_log.h"
 
 BlocksDataView::BlocksDataView(GameObject* p_parent, Blocks* p_game) :
+GameObject(p_parent),
 _game(p_game)
 {
-    _parent = p_parent;
-
     _nextTf = new Displayable(this);
     _nextTfIndex = _nextTf->addTexture(Renderer::createDisplayableText("NEXT:", Types::getFont(Types::Fonts::Regular)));
     _nextTf->setPosition(0, 0);

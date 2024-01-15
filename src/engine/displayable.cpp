@@ -9,17 +9,16 @@
 #include <SDL2/SDL_log.h>
 
 Displayable::Displayable(GameObject* p_parent) :
+GameObject(p_parent),
 _drawablePoints(),
 _drawableLines(),
 _drawableRectangles()
 {
     size_t numDisplayables = Renderer::addDisplayable(this);
     _id = "Displayable" + to_string(numDisplayables);
-    _parent = p_parent;
 }
 
 Displayable::~Displayable() {
-    _parent = nullptr;
     clear();
     Renderer::removeDisplayable(this);
 }

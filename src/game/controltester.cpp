@@ -8,9 +8,10 @@
 #include "engine/updatable.hpp"
 #include "engine/renderer.hpp"
 
-ControlTester::ControlTester(GameObject* p_parent) {
-    _parent = p_parent;
-
+ControlTester::ControlTester(GameObject* p_parent) :
+GameObject(p_parent)
+{
+    _id = "ControlTester";
     _debugTf = new Displayable(this);
     _tfIndex = _debugTf->addTexture(Renderer::createDisplayableText("0000000000", Types::getFont(Types::Fonts::Regular)));
     

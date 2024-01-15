@@ -1,6 +1,7 @@
 #include "blocks.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <vector>
 
@@ -27,7 +28,9 @@ void Blocks::Tetromino::rotate(const int& p_direction) {
     _rotation += p_direction;
 }
 
-Blocks::Blocks(const int& p_numColumns, const int& p_numRows) :
+Blocks::Blocks(const size_t& p_version, const int& p_numColumns, const int& p_numRows) :
+GameObject(nullptr),
+_version(p_version),
 _state(GameState::SPAWN_TETROMINO),
 _level(0),
 _playfield({}),
@@ -42,6 +45,8 @@ _history({}),
 _updater(nullptr),
 _input(nullptr)
 {
+    assert(_version > 0 && _version < 3);// Version should be 1 (TGM) or 2 (TAP)
+
     for (int i = 0; i < BUFFER_ROWS + p_numRows; i++) {
         std::vector<Block> row = {};
         for (int j = 0; j < p_numColumns; j++) {
@@ -127,7 +132,7 @@ void Blocks::_updateGame(const double&) {
         case SPAWN_TETROMINO:
             // We pick a piece and place it on the playfield
             // Wait for ARE
-            if (_frameTick < _getAre(_level)) {
+            if (_frameTick < _getAre(_level, _clearedLines.empty())) {
                 // DAS buffer
                 if (moveState & Controllable::LEFT) {
                     _dasCounter--;
@@ -223,6 +228,8 @@ void Blocks::_updateGame(const double&) {
             if (moveState & Controllable::DOWN) {
                 gravity = std::max(gravity, 256);
                 _lockCounter = 0;// Instant lock in case of collision
+            } else if ((_version > 1) && (moveState & Controllable::UP)) {
+                gravity = 256 * _playfield.size();
             }
 
             // The piece will chute by all this amount of gravity
@@ -320,7 +327,7 @@ bool Blocks::_isActivePiecePositionValid(const int& p_x, const int& p_y, const i
 
     for (size_t i = 0; i < activePieceBlocks.size(); i++) {
         int pieceColor = activePieceBlocks.at(i).colorIndex;
-        SDL_Log("%zu, %d;%d, %zu;%zu = %d", i, _activePiece->getX(), _activePiece->getY(), p_x + (i % 4), p_y + (i / 4), pieceColor);
+        //SDL_Log("%zu, %d;%d, %zu;%zu = %d", i, _activePiece->getX(), _activePiece->getY(), p_x + (i % 4), p_y + (i / 4), pieceColor);
         if (pieceColor < 0) // Ignore empty cells
             continue;
         int blockX = p_x + (i % 4);
@@ -329,11 +336,11 @@ bool Blocks::_isActivePiecePositionValid(const int& p_x, const int& p_y, const i
             || (blockY >= _playfield.size())
             || (blockX < 0)
             || (blockX >= _playfield.at(blockY).size())) {
-                SDL_Log("> OOB!");
+                //SDL_Log("> OOB!");
                 return false;
         }
         if (_playfield.at(blockY).at(blockX).colorIndex >= 0) {
-            SDL_Log("> block collision!");
+            //SDL_Log("> block collision!");
             return false;
         }
     }

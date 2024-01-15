@@ -51,12 +51,12 @@ class Controllable : public GameObject {
         std::function<void(Types::Point)> _onMouseButtonDownCallback;
         std::function<void(Types::Point)> _onDragCallback;
 
-        inline bool isInside(Types::Point p_point) {
+        bool isInside(Types::Point p_point) {
             if (_hitbox.isValid()) {
-                return ((p_point.x >= _parent->getX() + _hitbox.left())
-                    && (p_point.x <= _parent->getX() + _hitbox.right())
-                    && (p_point.y >= _parent->getY() + _hitbox.top())
-                    && (p_point.y <= _parent->getY() + _hitbox.bottom()));
+                return ((p_point.x >= getX() + _hitbox.left())
+                    && (p_point.x <= getX() + _hitbox.right())
+                    && (p_point.y >= getY() + _hitbox.top())
+                    && (p_point.y <= getY() + _hitbox.bottom()));
             }
 
             return true;
