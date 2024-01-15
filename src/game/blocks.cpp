@@ -126,7 +126,7 @@ std::string Blocks::getNextStr() {
 void Blocks::_updateGame(const double&) {
     _frameTick++;
 
-    int moveState, btnState, gravity, pieceTotalGravityAvailable;
+    int moveState, btnState, gravity, pieceTotalMoveAvailable, pieceTotalRotationAvailable, pieceTotalGravityAvailable;
 
     switch (_state) {
         case SPAWN_TETROMINO:
@@ -178,49 +178,61 @@ void Blocks::_updateGame(const double&) {
             // The gravity applies, we control the piece (includes lock delay)
             moveState = _input->getMoveState();
             btnState = _input->getButtonState();
+            pieceTotalMoveAvailable = 0;
+            pieceTotalRotationAvailable = 0;
 
             if (moveState & Controllable::LEFT) {
                 if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
                     if (_isActivePiecePositionValid(_activePiece->getX() - 1, _activePiece->getY(), _activePiece->getRotation()))
-                        _activePiece->move(-1);
+                        pieceTotalMoveAvailable = -1;
                 }
                 _dasCounter--;
             } else if (moveState & Controllable::RIGHT) {
                 if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
                     if (_isActivePiecePositionValid(_activePiece->getX() + 1, _activePiece->getY(), _activePiece->getRotation()))
-                        _activePiece->move(1);
+                        pieceTotalMoveAvailable = 1;
                 }
                 _dasCounter--;
             } else {
                 _dasCounter = _getDas(_level);
             }
-
+// ToDo: implement synchros
             if (btnState & Controllable::BTN_A) {
-                if (_btnIsReleased[0] && _isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() - 1)) {
+                if (_btnIsReleased[0]) {
                     _btnIsReleased[0] = false;
-                    _activePiece->rotate(-1);
+                    int kickedOffset = _kickPiece(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() - 1);
+                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
+                        pieceTotalMoveAvailable += kickedOffset;
+                        pieceTotalRotationAvailable = -1;
+                    }
                 }
             } else if (btnState | Controllable::BTN_A) {
                 _btnIsReleased[0] = true;
             }
             if (btnState & Controllable::BTN_B) {
-                if (_btnIsReleased[1] && _isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() + 1)) {
+                if (_btnIsReleased[1]) {
                     _btnIsReleased[1] = false;
-                    _activePiece->rotate(1);
+                    int kickedOffset = _kickPiece(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() + 1);
+                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
+                        pieceTotalMoveAvailable += kickedOffset;
+                        pieceTotalRotationAvailable = 1;
+                    }
                 }
             } else if (btnState | Controllable::BTN_B) {
                 _btnIsReleased[1] = true;
             }
             if (btnState & Controllable::BTN_C) {
-                if (_btnIsReleased[2] && _isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() - 1)) {
+                if (_btnIsReleased[2]) {
                     _btnIsReleased[2] = false;
-                    _activePiece->rotate(-1);
+                    int kickedOffset = _kickPiece(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() - 1);
+                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
+                        pieceTotalMoveAvailable += kickedOffset;
+                        pieceTotalRotationAvailable = -1;
+                    }
                 }
             } else if (btnState | Controllable::BTN_C) {
                 _btnIsReleased[2] = true;
             }
-
-            // Wall kicks
 
             // floor
             // For some reason GRAVITY_1_G (or Blocks::GRAVITY_1_G) doesn't compile here
@@ -244,6 +256,8 @@ void Blocks::_updateGame(const double&) {
             }
 
             // Move the piece by the available distance
+            _activePiece->move(pieceTotalMoveAvailable);
+            _activePiece->rotate(pieceTotalRotationAvailable);
             _activePiece->applyGravity(pieceTotalGravityAvailable);
 
             // The piece was interrupted in its chute
@@ -346,6 +360,17 @@ bool Blocks::_isActivePiecePositionValid(const int& p_x, const int& p_y, const i
     }
 
     return true;
+}
+
+int Blocks::_kickPiece(const int& p_x, const int& p_y, const int& p_rotation) {
+    std::vector<int> testPositions = {0, 1, -1};
+    // Try positions
+    for (int testPosition : testPositions) {
+        if (_isActivePiecePositionValid(p_x + testPosition, p_y, p_rotation)) {
+            return testPosition;
+        }
+    }
+    return Blocks::INVALID_KICK_OFFSET;
 }
 
 void Blocks::_lockPiece() {

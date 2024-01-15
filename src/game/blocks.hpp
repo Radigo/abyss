@@ -20,6 +20,7 @@ class Blocks : public GameObject {
     private:
         static const int BUFFER_ROWS = 1;   // How many rows are hiden over the playfield
         static const int GRAVITY_1_G = 256; // 1G in gravity units
+        static const int INVALID_KICK_OFFSET = 2;
 
         enum GameState {
             SPAWN_TETROMINO,    // We pick a piece and place it on the playfield (includes ARE)
@@ -101,6 +102,7 @@ class Blocks : public GameObject {
         TetrominoType _pickNextTetromino(bool p_firstDraw);
         int _getSpawnX();
         bool _isActivePiecePositionValid(const int& p_x, const int& p_y, const int& p_rotation);
+        int _kickPiece(const int& p_x, const int& p_y, const int& p_rotation);
         void _lockPiece();
         std::vector<size_t> _clearLines();
         void _reorganizePlayfieldAfterLineClear();
