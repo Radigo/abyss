@@ -17,10 +17,8 @@ class Updatable;
 class Controllable;
 
 class Blocks : public GameObject {
-    private:
-        static const int BUFFER_ROWS = 1;   // How many rows are hiden over the playfield
+    public:
         static const int GRAVITY_1_G = 256; // 1G in gravity units
-        static const int INVALID_KICK_OFFSET = 2;
 
         enum GameState {
             SPAWN_TETROMINO,    // We pick a piece and place it on the playfield (includes ARE)
@@ -29,15 +27,19 @@ class Blocks : public GameObject {
             GAME_OVER           // Game freezes and send an end signal to the void
         };
 
+        enum TetrominoType {
+            I, T, L, J, S, Z, O
+        };
+
         struct Block {
             Block(const int& p_color = -1) :
             colorIndex(p_color) {}
             int colorIndex = -1;
         };
 
-        enum TetrominoType {
-            I, T, L, J, S, Z, O
-        };
+    private:
+        static const int BUFFER_ROWS = 1;   // How many rows are hiden over the playfield
+        static const int INVALID_KICK_OFFSET = 2;
 
         struct Tetromino {
             public:
@@ -49,14 +51,13 @@ class Blocks : public GameObject {
             _gravityTick(0) {}
             ~Tetromino() {}
 
-            void applyGravity(const int& p_gravity);
-            void move(const int& p_direction);
-            void rotate(const int& p_direction);
-
             inline TetrominoType getType() { return _type; }
+            inline void setRotation(const int& p_rotation) { _rotation = p_rotation; }// Consider % this to limit value
             inline int getRotation() { return _rotation; }
             inline int getX() { return _x; }
+            inline void setX(const int& p_x) { _x = p_x; }
             inline int getY() { return _y; }
+            void applyGravity(const int& p_gravity);
 
             private:
                 TetrominoType _type;
@@ -75,7 +76,7 @@ class Blocks : public GameObject {
         Tetromino* _activePiece;
         std::vector<size_t> _clearedLines;
 
-        int _frameTick;// Our main internal time counter for each state
+        size_t _frameTick;// Our main internal time counter for each state
         int _irsRotation;// Initial rotation value
         int _dasCounter;// Delayed Auto Shift (holding direction)
         int _lockCounter;// Lock delay
@@ -91,17 +92,21 @@ class Blocks : public GameObject {
 
         std::vector<std::vector<std::pair<int, float>>> getPlayfield();
         std::string getNextStr();
+        bool isPiecePositionValid(std::vector<Block> p_pieceBlocks, const int& p_x, const int& p_y);
 
         inline void setLevel(const int p_level) { _level = p_level; }
         inline int getLevel() { return _level; }
         inline int getState() { return _state; }
-        inline int getFrameTick() { return _frameTick; }
+        inline int getGravity() { return _getGravity(_level); }
+        inline size_t getFrameTick() { return _frameTick; }
+        inline Controllable* getInput() { return _input; }
+        inline TetrominoType getNext() { return _nextTetromino; }
+        inline std::vector<Block> getNextAtRotation(const int& p_rotation) { return _getBlocks(_nextTetromino, p_rotation); }
 
     private:
         void _updateGame(const double& p_frameDeltaTime);
         TetrominoType _pickNextTetromino(bool p_firstDraw);
         int _getSpawnX();
-        bool _isActivePiecePositionValid(const int& p_x, const int& p_y, const int& p_rotation);
         int _kickPiece(const int& p_x, const int& p_y, const int& p_rotation);
         void _lockPiece();
         std::vector<size_t> _clearLines();

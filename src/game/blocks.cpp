@@ -20,14 +20,6 @@ void Blocks::Tetromino::applyGravity(const int& p_gravity) {
     }
 }
 
-void Blocks::Tetromino::move(const int& p_direction) {
-    _x += p_direction;
-}
-
-void Blocks::Tetromino::rotate(const int& p_direction) {
-    _rotation += p_direction;
-}
-
 Blocks::Blocks(const size_t& p_version, const int& p_numColumns, const int& p_numRows) :
 GameObject(nullptr),
 _version(p_version),
@@ -123,10 +115,34 @@ std::string Blocks::getNextStr() {
     return "";
 }
 
+bool Blocks::isPiecePositionValid(std::vector<Block> p_pieceBlocks, const int& p_x, const int& p_y) {
+    for (size_t i = 0; i < p_pieceBlocks.size(); i++) {
+        int pieceColor = p_pieceBlocks.at(i).colorIndex;
+        //SDL_Log("%zu, %d;%d, %zu;%zu = %d", i, _activePiece->getX(), _activePiece->getY(), p_x + (i % 4), p_y + (i / 4), pieceColor);
+        if (pieceColor < 0) // Ignore empty cells
+            continue;
+        int blockX = p_x + (i % 4);
+        int blockY = p_y + (i / 4);
+        if ((blockY < 0)
+            || (blockY >= _playfield.size())
+            || (blockX < 0)
+            || (blockX >= _playfield.at(blockY).size())) {
+                //SDL_Log("> OOB!");
+                return false;
+        }
+        if (_playfield.at(blockY).at(blockX).colorIndex >= 0) {
+            //SDL_Log("> block collision!");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void Blocks::_updateGame(const double&) {
     _frameTick++;
 
-    int moveState, btnState, gravity, pieceTotalMoveAvailable, pieceTotalRotationAvailable, pieceTotalGravityAvailable;
+    int inpState, gravity, piecePositionX, piecePositionY, pieceRotation, pieceTotalGravityAvailable;
 
     switch (_state) {
         case SPAWN_TETROMINO:
@@ -134,21 +150,21 @@ void Blocks::_updateGame(const double&) {
             // Wait for ARE
             if (_frameTick < _getAre(_level, _clearedLines.empty())) {
                 // DAS buffer
-                if (moveState & Controllable::LEFT) {
+                if (inpState & Controllable::LEFT) {
                     _dasCounter--;
-                } else if (moveState & Controllable::RIGHT) {
+                } else if (inpState & Controllable::RIGHT) {
                     _dasCounter--;
                 } else {
                     _dasCounter = _getDas(_level);
                 }
                 // IRS
-                if (btnState & Controllable::BTN_A) {
+                if (inpState & Controllable::BTN_A) {
                     _irsRotation = -1;
                     _btnIsReleased[0] = false;
-                } else if (btnState & Controllable::BTN_B) {
+                } else if (inpState & Controllable::BTN_B) {
                     _irsRotation = 1;
                     _btnIsReleased[1] = false;
-                } else if (btnState & Controllable::BTN_C) {
+                } else if (inpState & Controllable::BTN_C) {
                     _irsRotation = -1;
                     _btnIsReleased[2] = false;
                 } else {
@@ -161,7 +177,7 @@ void Blocks::_updateGame(const double&) {
                 // Spawn piece at correct location on the playfield (create the Tetromino* object)
                 _activePiece = new Tetromino(_nextTetromino, _getSpawnX(), 0, _irsRotation);
                 // GAME OVER if active piece spawns at invalid position
-                if (!_isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation())) {
+                if (!isPiecePositionValid(_getBlocks(_activePiece->getType(), _activePiece->getRotation()), _activePiece->getX(), _activePiece->getY())) {
                     _lockPiece();
                     _activePiece = nullptr;
                     _state = GAME_OVER;
@@ -175,72 +191,73 @@ void Blocks::_updateGame(const double&) {
             }
             break;
         case MOVE_TETROMINO:
-            // The gravity applies, we control the piece (includes lock delay)
-            moveState = _input->getMoveState();
-            btnState = _input->getButtonState();
-            pieceTotalMoveAvailable = 0;
-            pieceTotalRotationAvailable = 0;
+            // Block control flow: Rotation > Horizontal move > vertical drop
+// ToDo: implement synchros
+            inpState = _input->getInputState();
+            piecePositionX = _activePiece->getX();
+            piecePositionY = _activePiece->getY();
+            pieceRotation = _activePiece->getRotation();
 
-            if (moveState & Controllable::LEFT) {
+            // Rotation
+            if (inpState & Controllable::BTN_A) {
+                if (_btnIsReleased[0]) {
+                    _btnIsReleased[0] = false;
+                    int kickedOffset = _kickPiece(piecePositionX, piecePositionY, pieceRotation - 1);
+                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
+                        piecePositionX += kickedOffset;
+                        pieceRotation -= 1;
+                    }
+                }
+            } else if (inpState | Controllable::BTN_A) {
+                _btnIsReleased[0] = true;
+            }
+            if (inpState & Controllable::BTN_B) {
+                if (_btnIsReleased[1]) {
+                    _btnIsReleased[1] = false;
+                    int kickedOffset = _kickPiece(piecePositionX, piecePositionY, pieceRotation + 1);
+                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
+                        piecePositionX += kickedOffset;
+                        pieceRotation += 1;
+                    }
+                }
+            } else if (inpState | Controllable::BTN_B) {
+                _btnIsReleased[1] = true;
+            }
+            if (inpState & Controllable::BTN_C) {
+                if (_btnIsReleased[2]) {
+                    _btnIsReleased[2] = false;
+                    int kickedOffset = _kickPiece(piecePositionX, piecePositionY, pieceRotation - 1);
+                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
+                        piecePositionX += kickedOffset;
+                        pieceRotation -= 1;
+                    }
+                }
+            } else if (inpState | Controllable::BTN_C) {
+                _btnIsReleased[2] = true;
+            }
+            // Horizontal move
+            if (inpState & Controllable::LEFT) {
                 if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
-                    if (_isActivePiecePositionValid(_activePiece->getX() - 1, _activePiece->getY(), _activePiece->getRotation()))
-                        pieceTotalMoveAvailable = -1;
+                    if (isPiecePositionValid(_getBlocks(_activePiece->getType(), pieceRotation), piecePositionX - 1, piecePositionY))
+                        piecePositionX -= 1;
                 }
                 _dasCounter--;
-            } else if (moveState & Controllable::RIGHT) {
+            } else if (inpState & Controllable::RIGHT) {
                 if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
-                    if (_isActivePiecePositionValid(_activePiece->getX() + 1, _activePiece->getY(), _activePiece->getRotation()))
-                        pieceTotalMoveAvailable = 1;
+                    if (isPiecePositionValid(_getBlocks(_activePiece->getType(), pieceRotation), piecePositionX + 1, piecePositionY))
+                        piecePositionX += 1;
                 }
                 _dasCounter--;
             } else {
                 _dasCounter = _getDas(_level);
             }
-// ToDo: implement synchros
-            if (btnState & Controllable::BTN_A) {
-                if (_btnIsReleased[0]) {
-                    _btnIsReleased[0] = false;
-                    int kickedOffset = _kickPiece(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() - 1);
-                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
-                        pieceTotalMoveAvailable += kickedOffset;
-                        pieceTotalRotationAvailable = -1;
-                    }
-                }
-            } else if (btnState | Controllable::BTN_A) {
-                _btnIsReleased[0] = true;
-            }
-            if (btnState & Controllable::BTN_B) {
-                if (_btnIsReleased[1]) {
-                    _btnIsReleased[1] = false;
-                    int kickedOffset = _kickPiece(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() + 1);
-                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
-                        pieceTotalMoveAvailable += kickedOffset;
-                        pieceTotalRotationAvailable = 1;
-                    }
-                }
-            } else if (btnState | Controllable::BTN_B) {
-                _btnIsReleased[1] = true;
-            }
-            if (btnState & Controllable::BTN_C) {
-                if (_btnIsReleased[2]) {
-                    _btnIsReleased[2] = false;
-                    int kickedOffset = _kickPiece(_activePiece->getX(), _activePiece->getY(), _activePiece->getRotation() - 1);
-                    if (kickedOffset != Blocks::INVALID_KICK_OFFSET) {
-                        pieceTotalMoveAvailable += kickedOffset;
-                        pieceTotalRotationAvailable = -1;
-                    }
-                }
-            } else if (btnState | Controllable::BTN_C) {
-                _btnIsReleased[2] = true;
-            }
-
-            // floor
+            // Vertical drop
             // For some reason GRAVITY_1_G (or Blocks::GRAVITY_1_G) doesn't compile here
             gravity = _getGravity(_level);
-            if (moveState & Controllable::DOWN) {
+            if (inpState & Controllable::DOWN) {
                 gravity = std::max(gravity, 256);
                 _lockCounter = 0;// Instant lock in case of collision
-            } else if ((_version > 1) && (moveState & Controllable::UP)) {
+            } else if ((_version > 1) && (inpState & Controllable::UP)) {
                 gravity = 256 * _playfield.size();
             }
 
@@ -249,15 +266,15 @@ void Blocks::_updateGame(const double&) {
 
             // We test where the piece will be if it's affected by gravity
             for (int i = 0; i <= _getRowsByGravity(gravity); i++) {
-                if (!_isActivePiecePositionValid(_activePiece->getX(), _activePiece->getY() + i, _activePiece->getRotation())) {
+                if (!isPiecePositionValid(_getBlocks(_activePiece->getType(), pieceRotation), piecePositionX, piecePositionY + i)) {
                     pieceTotalGravityAvailable = (i - 1) * 256;
                     break;
                 }
             }
 
             // Move the piece by the available distance
-            _activePiece->move(pieceTotalMoveAvailable);
-            _activePiece->rotate(pieceTotalRotationAvailable);
+            _activePiece->setX(piecePositionX);
+            _activePiece->setRotation(pieceRotation);
             _activePiece->applyGravity(pieceTotalGravityAvailable);
 
             // The piece was interrupted in its chute
@@ -336,37 +353,11 @@ int Blocks::_getSpawnX() {
     return static_cast<int>(static_cast<float>(_playfield.at(0).size()) * 0.5f) - 2;
 }
 
-bool Blocks::_isActivePiecePositionValid(const int& p_x, const int& p_y, const int& p_rotation) {
-    std::vector<Block> activePieceBlocks = _getBlocks(_activePiece->getType(), p_rotation);
-
-    for (size_t i = 0; i < activePieceBlocks.size(); i++) {
-        int pieceColor = activePieceBlocks.at(i).colorIndex;
-        //SDL_Log("%zu, %d;%d, %zu;%zu = %d", i, _activePiece->getX(), _activePiece->getY(), p_x + (i % 4), p_y + (i / 4), pieceColor);
-        if (pieceColor < 0) // Ignore empty cells
-            continue;
-        int blockX = p_x + (i % 4);
-        int blockY = p_y + (i / 4);
-        if ((blockY < 0)
-            || (blockY >= _playfield.size())
-            || (blockX < 0)
-            || (blockX >= _playfield.at(blockY).size())) {
-                //SDL_Log("> OOB!");
-                return false;
-        }
-        if (_playfield.at(blockY).at(blockX).colorIndex >= 0) {
-            //SDL_Log("> block collision!");
-            return false;
-        }
-    }
-
-    return true;
-}
-
 int Blocks::_kickPiece(const int& p_x, const int& p_y, const int& p_rotation) {
     std::vector<int> testPositions = {0, 1, -1};
     // Try positions
     for (int testPosition : testPositions) {
-        if (_isActivePiecePositionValid(p_x + testPosition, p_y, p_rotation)) {
+        if (isPiecePositionValid(_getBlocks(_activePiece->getType(), p_rotation), p_x + testPosition, p_y)) {
             return testPosition;
         }
     }

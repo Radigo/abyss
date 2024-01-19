@@ -9,8 +9,7 @@ Controllable::Controllable(GameObject* p_parent) :
 GameObject(p_parent),
 _hitbox(0, 0, -1, -1),
 _isDownInside(false),
-_moveState(0u),
-_buttonState(0u),
+_inputState(0u),
 _onClickCallback(nullptr),
 _onMouseButtonDownCallback(nullptr),
 _onDragCallback(nullptr)

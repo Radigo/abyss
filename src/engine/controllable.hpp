@@ -7,15 +7,17 @@
 
 class Controllable : public GameObject {
     public:
-        static constexpr int UP         = 1 << 0;
-        static constexpr int DOWN       = 1 << 1;
-        static constexpr int LEFT       = 1 << 2;
-        static constexpr int RIGHT      = 1 << 3;
+        static constexpr int NONE       = 1 << 0;
 
-        static constexpr int BTN_A      = 1 << 3;
-        static constexpr int BTN_B      = 1 << 4;
-        static constexpr int BTN_C      = 1 << 5;
-        static constexpr int BTN_START  = 1 << 6;
+        static constexpr int UP         = 1 << 1;
+        static constexpr int DOWN       = 1 << 2;
+        static constexpr int LEFT       = 1 << 3;
+        static constexpr int RIGHT      = 1 << 4;
+
+        static constexpr int BTN_A      = 1 << 5;
+        static constexpr int BTN_B      = 1 << 6;
+        static constexpr int BTN_C      = 1 << 7;
+        static constexpr int BTN_START  = 1 << 8;
         
         Controllable(GameObject* p_parent);
         ~Controllable();
@@ -29,23 +31,23 @@ class Controllable : public GameObject {
         void onMouseButtonDown(Types::Point p_point);
         void onMouseButtonUp(Types::Point p_point);
         void onMouseMove(Types::Point p_point);
-        inline void onUp(bool p_flag) { if (p_flag) _moveState |= UP; else _moveState &= ~UP; }
-        inline void onDown(bool p_flag) { if (p_flag) _moveState |= DOWN; else _moveState &= ~DOWN; }
-        inline void onLeft(bool p_flag) { if (p_flag) _moveState |= LEFT; else _moveState &= ~LEFT; }
-        inline void onRight(bool p_flag) { if (p_flag) _moveState |= RIGHT; else _moveState &= ~RIGHT; }
-        inline void onButtonA(bool p_flag) { if (p_flag) _buttonState |= BTN_A; else _buttonState &= ~BTN_A; }
-        inline void onButtonB(bool p_flag) { if (p_flag) _buttonState |= BTN_B; else _buttonState &= ~BTN_B; }
-        inline void onButtonC(bool p_flag) { if (p_flag) _buttonState |= BTN_C; else _buttonState &= ~BTN_C; }
-        inline void onButtonStart(bool p_flag) { if (p_flag) _buttonState |= BTN_START; else _buttonState &= ~BTN_START; }
+        inline void onUp(bool p_flag) { if (p_flag) _inputState |= UP; else _inputState &= ~UP; }
+        inline void onDown(bool p_flag) { if (p_flag) _inputState |= DOWN; else _inputState &= ~DOWN; }
+        inline void onLeft(bool p_flag) { if (p_flag) _inputState |= LEFT; else _inputState &= ~LEFT; }
+        inline void onRight(bool p_flag) { if (p_flag) _inputState |= RIGHT; else _inputState &= ~RIGHT; }
+        inline void onButtonA(bool p_flag) { if (p_flag) _inputState |= BTN_A; else _inputState &= ~BTN_A; }
+        inline void onButtonB(bool p_flag) { if (p_flag) _inputState |= BTN_B; else _inputState &= ~BTN_B; }
+        inline void onButtonC(bool p_flag) { if (p_flag) _inputState |= BTN_C; else _inputState &= ~BTN_C; }
+        inline void onButtonStart(bool p_flag) { if (p_flag) _inputState |= BTN_START; else _inputState &= ~BTN_START; }
 
-        inline int getMoveState() { return _moveState; }
-        inline int getButtonState() { return _buttonState; }
+        // States
+        inline void setInputState(int p_inpState) { _inputState = p_inpState; }
+        inline int getInputState() { return _inputState; }
 
     private:
         Types::Rectangle _hitbox;
         bool _isDownInside;
-        int _moveState;
-        int _buttonState;
+        int _inputState;
 
         std::function<void()> _onClickCallback;
         std::function<void(Types::Point)> _onMouseButtonDownCallback;

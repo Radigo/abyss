@@ -3,11 +3,12 @@
 #include "engine/displayable.hpp"
 #include "engine/renderer.hpp"
 #include "game/controltester.hpp"
-#include "ui/fpscounter.hpp"
-#include "ui/textbutton.hpp"
 #include "game/blocks.hpp"
 #include "game/blocksview.hpp"
 #include "game/blocksdataview.hpp"
+#include "ui/fpscounter.hpp"
+#include "ui/textbutton.hpp"
+#include "bot/bot.hpp"
 
 #include <time.h> // For rand only, try a fixed seed
 
@@ -55,6 +56,20 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     });
     createBlocksRandWindowBtn->setPosition(50, 170);
 
+    TextButton* createBlocksBotWindowBtn = new TextButton(nullptr, "Bot Blocks(tm) window", [this](){
+        Blocks* game = createBlocksWindow(1, 0, 10, 20);
+        Bot* bot = new Bot(game);
+    });
+    createBlocksBotWindowBtn->setPosition(50, 200);
+
+    TextButton* createBlocksBotRandWindowBtn = new TextButton(nullptr, "Bot Random size Blocks(tm) window", [this](){
+        int version = 1 + rand() % 2;
+        int numColumns = 5 + rand() % 30;
+        int numRows = 10 + rand() % 60;
+        Bot* bot = new Bot(createBlocksWindow(version, 0, numColumns, numRows));
+    });
+    createBlocksBotRandWindowBtn->setPosition(50, 220);
+
     return true;
 }
 
@@ -79,7 +94,7 @@ void Scene::createWindow(const std::string p_textureAssetName) {
     _windows.push_back(window);
 }
 
-void Scene::createBlocksWindow(const int p_version, const int p_startLevel, const int p_numColumns, const int p_numRows) {
+Blocks* Scene::createBlocksWindow(const int p_version, const int p_startLevel, const int p_numColumns, const int p_numRows) {
     std::string windowId = "Blocks " + to_string(_windows.size());
     int cellSize = 16;
     int width = cellSize * p_numColumns + 100;
@@ -101,8 +116,9 @@ void Scene::createBlocksWindow(const int p_version, const int p_startLevel, cons
     blocksDataView->setPosition(dataViewX, 30);
 
     window->setPosition(randX, randY);
-
     _windows.push_back(window);
+
+    return blocks;
 }
 
 void Scene::deleteWindow(const std::string p_id) {
