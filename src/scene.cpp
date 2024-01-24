@@ -9,6 +9,7 @@
 #include "ui/fpscounter.hpp"
 #include "ui/textbutton.hpp"
 #include "bot/bot.hpp"
+#include "bot/botdataview.hpp"
 
 #include <time.h> // For rand only, try a fixed seed
 
@@ -39,26 +40,25 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
     TextButton* createTextureWindowBtn = new TextButton(nullptr, "Create texture window", [this](){ createWindow("mnc_arrow.png"); });
     createTextureWindowBtn->setPosition(50, 80);
 
-    TextButton* createBlocksTGMWindowBtn = new TextButton(nullptr, "Blocks(tm) TGM", [this](){ createBlocksWindow(1, 0, 10, 20); });
+    TextButton* createBlocksTGMWindowBtn = new TextButton(nullptr, "Blocks(tm) TGM", [this](){ createBlocksWindow(1, 0, 10, 20, false); });
     createBlocksTGMWindowBtn->setPosition(50, 110);
 
-    TextButton* createBlocksTAPWindowBtn = new TextButton(nullptr, "Blocks(tm) TAP", [this](){ createBlocksWindow(2, 0, 10, 20); });
+    TextButton* createBlocksTAPWindowBtn = new TextButton(nullptr, "Blocks(tm) TAP", [this](){ createBlocksWindow(2, 0, 10, 20, false); });
     createBlocksTAPWindowBtn->setPosition(50, 130);
 
-    TextButton* createBlocksLvl500WindowBtn = new TextButton(nullptr, "20G Blocks(tm) window", [this](){ createBlocksWindow(2, 500, 10, 20); });
+    TextButton* createBlocksLvl500WindowBtn = new TextButton(nullptr, "20G Blocks(tm) window", [this](){ createBlocksWindow(2, 500, 10, 20, false); });
     createBlocksLvl500WindowBtn->setPosition(50, 150);
 
     TextButton* createBlocksRandWindowBtn = new TextButton(nullptr, "Random size Blocks(tm) window", [this](){
         int version = 1 + rand() % 2;
         int numColumns = 5 + rand() % 30;
         int numRows = 10 + rand() % 60;
-        createBlocksWindow(version, 0, numColumns, numRows);
+        createBlocksWindow(version, 0, numColumns, numRows, false);
     });
     createBlocksRandWindowBtn->setPosition(50, 170);
 
     TextButton* createBlocksBotWindowBtn = new TextButton(nullptr, "Bot Blocks(tm) window", [this](){
-        Blocks* game = createBlocksWindow(1, 0, 10, 20);
-        Bot* bot = new Bot(game);
+        createBlocksWindow(1, 0, 10, 20, true);
     });
     createBlocksBotWindowBtn->setPosition(50, 200);
 
@@ -66,7 +66,7 @@ bool Scene::init(int p_sceneWidth, int p_sceneHeight) {
         int version = 1 + rand() % 2;
         int numColumns = 5 + rand() % 30;
         int numRows = 10 + rand() % 60;
-        Bot* bot = new Bot(createBlocksWindow(version, 0, numColumns, numRows));
+        createBlocksWindow(version, 0, numColumns, numRows, true);
     });
     createBlocksBotRandWindowBtn->setPosition(50, 220);
 
@@ -94,7 +94,7 @@ void Scene::createWindow(const std::string p_textureAssetName) {
     _windows.push_back(window);
 }
 
-Blocks* Scene::createBlocksWindow(const int p_version, const int p_startLevel, const int p_numColumns, const int p_numRows) {
+void Scene::createBlocksWindow(const int p_version, const int p_startLevel, const int p_numColumns, const int p_numRows, const bool p_isPlayedByBot) {
     std::string windowId = "Blocks " + to_string(_windows.size());
     int cellSize = 16;
     int width = cellSize * p_numColumns + 100;
@@ -115,10 +115,13 @@ Blocks* Scene::createBlocksWindow(const int p_version, const int p_startLevel, c
     BlocksDataView* blocksDataView = new BlocksDataView(window, blocks);
     blocksDataView->setPosition(dataViewX, 30);
 
+    if (p_isPlayedByBot) {
+        Bot* bot = new Bot(blocks);
+        BotDataView* botDataView = new BotDataView(blocksView, blocks, bot, cellSize);
+    }
+
     window->setPosition(randX, randY);
     _windows.push_back(window);
-
-    return blocks;
 }
 
 void Scene::deleteWindow(const std::string p_id) {

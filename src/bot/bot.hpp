@@ -11,6 +11,9 @@ class Bot {
         Bot(Blocks* p_game);
         ~Bot();
 
+        std::vector<std::vector<int>> getDebugTarget();
+        std::vector<std::vector<int>> getDebugHorizon();
+
     private:
         enum HorizonCrawlerDirection {
             Up,
@@ -21,9 +24,10 @@ class Bot {
         };
 
         struct Target {
-            int x;
-            int y;
-            int rotation;
+            Blocks::TetrominoType type = Blocks::TetrominoType::I;
+            int x = 0;
+            int y = 0;
+            int rotation = 0;
         };
 
         struct Horizon {
@@ -74,10 +78,11 @@ class Bot {
 
         std::vector<int> _inputs;
         Horizon _debugHorizon;
+        Target _debugTarget;
 
         void _updateBot(const double& p_frameDeltaTime);
 
         Target _getTarget(const Blocks::TetrominoType& p_piece);
         Horizon _getHorizon(const std::vector<std::vector<std::pair<int, float>>>& p_playfield);
-        std::vector<int> _generateInputs(const Target& p_target, const int& p_numFrames);
+        std::vector<int> _generateInputs(const std::vector<std::vector<std::pair<int, float>>>& p_playfield, const Target& p_target, const int& p_numFrames);
 };

@@ -31,15 +31,41 @@ Bot::~Bot() {
 
 }
 
+// Generic visualization of the target on the playfield
+std::vector<std::vector<int>> Bot::getDebugTarget() {
+    // Initialize an empty vector to piece coordinates
+    std::vector<int> row(_debugTarget.x + 3, -1);
+    std::vector<std::vector<int>> targetCoordinates(_debugTarget.y + 4, row);
+
+    std::vector<Blocks::Block> nextBlocks = _game->getBlocks(_debugTarget.type, _debugTarget.rotation);
+
+    // Add the piece at coordinates
+    for (size_t i = 0; i < nextBlocks.size(); i++) {
+        if (nextBlocks.at(i).colorIndex >= 0) {
+            int blockX = _debugTarget.x + (i % 4);
+            int blockY = _debugTarget.y + (i / 4) - Blocks::BUFFER_ROWS;
+            targetCoordinates[blockY][blockX] = nextBlocks.at(i).colorIndex;
+        }
+    }
+
+    return targetCoordinates;
+}
+
+// Generic visualization of the horizon on the playfield
+std::vector<std::vector<int>> Bot::getDebugHorizon() {
+    return {};
+}
+
 void Bot::_updateBot(const double& p_frameDeltaTime) {
     switch (_game->getState()) {
         case Blocks::SPAWN_TETROMINO:
             if (_game->getFrameTick() == 1) {
                 Target target = _getTarget(_game->getNext());
+                // Save for debug
+                _debugTarget = target;
                 // Get how many frames until lock
                 size_t numFrames = _game->getPlayfield().size() * Blocks::GRAVITY_1_G / _game->getGravity();
-                SDL_Log("numFrames to position %d, %d: %zu", target.x, target.y, numFrames);
-                _inputs = _generateInputs(target, numFrames);
+                _inputs = _generateInputs(_game->getPlayfield(), target, numFrames);
             }
             break;
         case Blocks::MOVE_TETROMINO:
@@ -69,42 +95,49 @@ Bot::Target Bot::_getTarget(const Blocks::TetrominoType& p_piece) {
     The lower the better
     */
 
-    // The returned playfield is supposed to have no active piece when retrieved at this moment
     std::vector<std::vector<std::pair<int, float>>> playfield = _game->getPlayfield();
-    std::vector<Blocks::Block> nextBlocks = _game->getNextAtRotation(0);
+
     // Get a current verison of the horizon
     Horizon prevHorizon;
     Target target;
+    target.type = p_piece;
 
-    for (size_t rowIdx = 0; rowIdx < playfield.size(); rowIdx++) {
-        for (size_t colIdx = 0; colIdx < playfield.at(rowIdx).size(); colIdx++) {
-            if (_game->isPiecePositionValid(nextBlocks, colIdx, rowIdx)) {
-                // Make a copy of the playfield
-                auto testPlayfield = playfield;
-                // Add tested piece to the playfield
-                for (size_t i = 0; i < nextBlocks.size(); i++) {
-                    //SDL_Log("%zu, %d, %zu, %d, %zu", i, _activePiece->getX(), (i % 4), _activePiece->getY(), (i / 4));
-                    int pieceColor = nextBlocks.at(i).colorIndex;
-                    if (pieceColor < 0) // Ignore empty cells
-                        continue;
-                    int blockX = colIdx + (i % 4);
-                    int blockY = rowIdx + (i / 4);
-                    if ((blockY >= 0) && (blockY < testPlayfield.size())) {
-                        if ((blockX >= 0) && (blockX < testPlayfield.at(blockY).size())) {
-                            testPlayfield.at(blockY).at(blockX) = std::make_pair(pieceColor, 0.0f);
+    for (size_t rotation = 0; rotation < _game->getNumPossibleRotations(p_piece); rotation++) {
+        std::vector<Blocks::Block> nextBlocksAtRotation = _game->getBlocks(p_piece, rotation);
+        for (size_t rowIdx = 0; rowIdx < playfield.size(); rowIdx++) {
+            for (size_t colIdx = 0; colIdx < playfield.at(rowIdx).size(); colIdx++) {
+                // We shift the piece to be able to test it in all configurations
+                int pieceX = colIdx - 2;
+                int pieceY = rowIdx - 1;
+                if (_game->isPiecePositionValid(nextBlocksAtRotation, pieceX, pieceY)) {
+                    // Make a copy of the playfield
+                    auto testPlayfield = playfield;
+                    // Add tested piece to the playfield
+                    for (size_t i = 0; i < nextBlocksAtRotation.size(); i++) {
+                        //SDL_Log("%zu, %d, %zu, %d, %zu", i, _activePiece->getX(), (i % 4), _activePiece->getY(), (i / 4));
+                        int pieceColor = nextBlocksAtRotation.at(i).colorIndex;
+                        if (pieceColor < 0) // Ignore empty cells
+                            continue;
+                        int blockX = pieceX + (i % 4);
+                        int blockY = pieceY + (i / 4);
+                        if ((blockY >= 0) && (blockY < testPlayfield.size())) {
+                            if ((blockX >= 0) && (blockX < testPlayfield.at(blockY).size())) {
+                                testPlayfield.at(blockY).at(blockX) = std::make_pair(pieceColor, 0.0f);
+                            }
                         }
                     }
-                }
-                // Get horizon
-                Horizon newHorizon = _getHorizon(testPlayfield);
-                // Compare with previous
-                if (newHorizon < prevHorizon) {
-                    // Save for debug
-                    _debugHorizon = newHorizon;
+                    // Get horizon
+                    Horizon newHorizon = _getHorizon(testPlayfield);
+                    // Compare with previous
+                    if (newHorizon < prevHorizon) {
+                        // Save for debug
+                        _debugHorizon = newHorizon;
 
-                    // If smaller, save piece position in target
-                    target.x = colIdx;
-                    target.y = rowIdx;
+                        // If smaller, save piece position in target
+                        target.x = pieceX;
+                        target.y = pieceY;
+                        target.rotation = rotation;
+                    }
                 }
             }
         }
@@ -186,20 +219,40 @@ Bot::Horizon Bot::_getHorizon(const std::vector<std::vector<std::pair<int, float
 /** Returns the list of all inputs until the piece locks
  * Returned data are the input value frame by frame
 */
-std::vector<int> Bot::_generateInputs(const Target& p_target, const int& p_numFrames) {
+std::vector<int> Bot::_generateInputs(const std::vector<std::vector<std::pair<int, float>>>& p_playfield, const Target& p_target, const int& p_numFrames) {
     std::vector<int> inputs;
 
     // Aim for target x, y and rotation
-    // consider a virtual active piece and evaluate distance to target for every input
+    int currentX = _game->getSpawnX();
+    int currentRotation = 0;
 
     for (size_t i = 0; i < p_numFrames; i++) {
-        if (i % 10 == 0)
+        bool canLock = (currentX == p_target.x) && (currentRotation == p_target.rotation);
+        if (i % 10 == 0) {
+            // Rotate until reaching target
+            if (currentRotation < p_target.rotation) {
+                currentRotation++;
+                inputs.push_back(static_cast<int>(Controllable::BTN_B));
+            } else if (currentRotation > p_target.rotation) {
+                currentRotation--;
+                inputs.push_back(static_cast<int>(Controllable::BTN_A));
+            }
 
-            // Fill up with random input
-            inputs.push_back(rand() % Controllable::BTN_C);
-        else
-            inputs.push_back(0);
-
+            // Move until reaching target
+            if (currentX < p_target.x) {
+                currentX++;
+                inputs.push_back(static_cast<int>(Controllable::RIGHT));
+            } else if (currentX > p_target.x) {
+                currentX--;
+                inputs.push_back(static_cast<int>(Controllable::LEFT));
+            }
+        } else {
+            // Fill up with lock input
+            if (canLock)
+                inputs.push_back(static_cast<int>(Controllable::DOWN));
+            else
+                inputs.push_back(0);
+        }
     }
 
    return inputs;

@@ -25,6 +25,7 @@ GameObject(nullptr),
 _version(p_version),
 _state(GameState::SPAWN_TETROMINO),
 _level(0),
+_blocksDb({}),
 _playfield({}),
 _nextTetromino(TetrominoType::I),
 _activePiece(nullptr),
@@ -38,6 +39,8 @@ _updater(nullptr),
 _input(nullptr)
 {
     assert(_version > 0 && _version < 3);// Version should be 1 (TGM) or 2 (TAP)
+
+    _blocksDb = _buildBlocksDb();
 
     for (int i = 0; i < BUFFER_ROWS + p_numRows; i++) {
         std::vector<Block> row = {};
@@ -74,7 +77,7 @@ std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
     // Add active piece to the playfield if it's there
     const float lockRatio = static_cast<float>(_lockCounter) / static_cast<float>(_getLockDelay(_level));
     if (_activePiece) {
-        std::vector<Block> activePieceBlocks = _getBlocks(_activePiece->getType(), _activePiece->getRotation());
+        std::vector<Block> activePieceBlocks = getBlocks(_activePiece->getType(), _activePiece->getRotation());
         for (size_t i = 0; i < activePieceBlocks.size(); i++) {
             //SDL_Log("%zu, %d, %zu, %d, %zu", i, _activePiece->getX(), (i % 4), _activePiece->getY(), (i / 4));
             int pieceColor = activePieceBlocks.at(i).colorIndex;
@@ -175,9 +178,9 @@ void Blocks::_updateGame(const double&) {
                 }
             } else {
                 // Spawn piece at correct location on the playfield (create the Tetromino* object)
-                _activePiece = new Tetromino(_nextTetromino, _getSpawnX(), 0, _irsRotation);
+                _activePiece = new Tetromino(_nextTetromino, getSpawnX(), 0, _irsRotation);
                 // GAME OVER if active piece spawns at invalid position
-                if (!isPiecePositionValid(_getBlocks(_activePiece->getType(), _activePiece->getRotation()), _activePiece->getX(), _activePiece->getY())) {
+                if (!isPiecePositionValid(getBlocks(_activePiece->getType(), _activePiece->getRotation()), _activePiece->getX(), _activePiece->getY())) {
                     _lockPiece();
                     _activePiece = nullptr;
                     _state = GAME_OVER;
@@ -238,13 +241,13 @@ void Blocks::_updateGame(const double&) {
             // Horizontal move
             if (inpState & Controllable::LEFT) {
                 if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
-                    if (isPiecePositionValid(_getBlocks(_activePiece->getType(), pieceRotation), piecePositionX - 1, piecePositionY))
+                    if (isPiecePositionValid(getBlocks(_activePiece->getType(), pieceRotation), piecePositionX - 1, piecePositionY))
                         piecePositionX -= 1;
                 }
                 _dasCounter--;
             } else if (inpState & Controllable::RIGHT) {
                 if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
-                    if (isPiecePositionValid(_getBlocks(_activePiece->getType(), pieceRotation), piecePositionX + 1, piecePositionY))
+                    if (isPiecePositionValid(getBlocks(_activePiece->getType(), pieceRotation), piecePositionX + 1, piecePositionY))
                         piecePositionX += 1;
                 }
                 _dasCounter--;
@@ -266,7 +269,7 @@ void Blocks::_updateGame(const double&) {
 
             // We test where the piece will be if it's affected by gravity
             for (int i = 0; i <= _getRowsByGravity(gravity); i++) {
-                if (!isPiecePositionValid(_getBlocks(_activePiece->getType(), pieceRotation), piecePositionX, piecePositionY + i)) {
+                if (!isPiecePositionValid(getBlocks(_activePiece->getType(), pieceRotation), piecePositionX, piecePositionY + i)) {
                     pieceTotalGravityAvailable = (i - 1) * 256;
                     break;
                 }
@@ -349,15 +352,11 @@ Blocks::TetrominoType Blocks::_pickNextTetromino(bool p_firstDraw) {
     return next;
 }
 
-int Blocks::_getSpawnX() {
-    return static_cast<int>(static_cast<float>(_playfield.at(0).size()) * 0.5f) - 2;
-}
-
 int Blocks::_kickPiece(const int& p_x, const int& p_y, const int& p_rotation) {
     std::vector<int> testPositions = {0, 1, -1};
     // Try positions
     for (int testPosition : testPositions) {
-        if (isPiecePositionValid(_getBlocks(_activePiece->getType(), p_rotation), p_x + testPosition, p_y)) {
+        if (isPiecePositionValid(getBlocks(_activePiece->getType(), p_rotation), p_x + testPosition, p_y)) {
             return testPosition;
         }
     }
@@ -365,7 +364,7 @@ int Blocks::_kickPiece(const int& p_x, const int& p_y, const int& p_rotation) {
 }
 
 void Blocks::_lockPiece() {
-    std::vector<Block> activePieceBlocks = _getBlocks(_activePiece->getType(), _activePiece->getRotation());
+    std::vector<Block> activePieceBlocks = getBlocks(_activePiece->getType(), _activePiece->getRotation());
 
     for (size_t i = 0; i < activePieceBlocks.size(); i++) {
         int pieceColor = activePieceBlocks.at(i).colorIndex;

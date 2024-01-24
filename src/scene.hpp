@@ -28,7 +28,7 @@ class Scene : public GameObject {
         std::vector<Window*> _windows;
 
         void createWindow(const std::string p_textureAssetName = "");
-        Blocks* createBlocksWindow(const int p_version, const int p_startLevel, const int p_numColumns, const int p_numRows);
+        void createBlocksWindow(const int p_version, const int p_startLevel, const int p_numColumns, const int p_numRows, const bool p_isPlayedByBot);
         void deleteWindow(const std::string p_id);
 
     public:

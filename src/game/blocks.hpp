@@ -18,6 +18,7 @@ class Controllable;
 
 class Blocks : public GameObject {
     public:
+        static const int BUFFER_ROWS = 1;   // How many rows are hiden over the playfield
         static const int GRAVITY_1_G = 256; // 1G in gravity units
 
         enum GameState {
@@ -38,7 +39,6 @@ class Blocks : public GameObject {
         };
 
     private:
-        static const int BUFFER_ROWS = 1;   // How many rows are hiden over the playfield
         static const int INVALID_KICK_OFFSET = 2;
 
         struct Tetromino {
@@ -71,6 +71,7 @@ class Blocks : public GameObject {
         GameState _state;
         size_t _level;
 
+        std::unordered_map<TetrominoType, std::vector<std::vector<int>>> _blocksDb;
         std::vector<std::vector<Block>> _playfield;
         TetrominoType _nextTetromino;
         Tetromino* _activePiece;
@@ -101,16 +102,151 @@ class Blocks : public GameObject {
         inline size_t getFrameTick() { return _frameTick; }
         inline Controllable* getInput() { return _input; }
         inline TetrominoType getNext() { return _nextTetromino; }
-        inline std::vector<Block> getNextAtRotation(const int& p_rotation) { return _getBlocks(_nextTetromino, p_rotation); }
+        inline int getSpawnX() { return static_cast<int>(static_cast<float>(_playfield.at(0).size()) * 0.5f) - 2; }
+        inline std::vector<Block> getBlocks(const TetrominoType& p_type, const int& p_rotation) {
+            std::vector<Blocks::Block> blocks;
+            std::vector<int> colorsAtRotation = _blocksDb.at(p_type).at(p_rotation % _blocksDb.at(p_type).size());
+            for (size_t i = 0; i < colorsAtRotation.size(); i++) {
+                blocks.push_back(Block(colorsAtRotation.at(i)));
+            }
+
+            return blocks;
+        }
+        inline size_t getNumPossibleRotations(const TetrominoType& p_type) {
+            return _blocksDb.at(p_type).size();
+        }
 
     private:
         void _updateGame(const double& p_frameDeltaTime);
         TetrominoType _pickNextTetromino(bool p_firstDraw);
-        int _getSpawnX();
         int _kickPiece(const int& p_x, const int& p_y, const int& p_rotation);
         void _lockPiece();
         std::vector<size_t> _clearLines();
         void _reorganizePlayfieldAfterLineClear();
+
+        inline std::unordered_map<TetrominoType, std::vector<std::vector<int>>> _buildBlocksDb() {
+            // Tetromino map from: https://tetris.wiki/Arika_Rotation_System
+            std::unordered_map<TetrominoType, std::vector<std::vector<int>>> db;
+            std::vector<std::vector<int>> colors;
+
+            colors = {{
+                -1, -1, -1, -1,
+                0,  0,  0,  0,
+                -1, -1, -1, -1,
+                -1, -1, -1, -1,
+            },{
+                -1, -1,  0, -1,
+                -1, -1,  0, -1,
+                -1, -1,  0, -1,
+                -1, -1,  0, -1,
+            }};
+            db.emplace(I, colors);
+
+            colors = {{
+                -1, -1, -1, -1,
+                1,  1,  1, -1,
+                -1,  1, -1, -1,
+                -1, -1, -1, -1,
+            },{
+                -1,  1, -1, -1,
+                1,  1, -1, -1,
+                -1,  1, -1, -1,
+                -1, -1, -1, -1,
+            },{
+                -1, -1, -1, -1,
+                -1,  1, -1, -1,
+                1,  1,  1, -1,
+                -1, -1, -1, -1,
+            },{
+                -1,  1, -1, -1,
+                -1,  1,  1, -1,
+                -1,  1, -1, -1,
+                -1, -1, -1, -1,
+            }};
+            db.emplace(T, colors);
+                    
+            colors = {{
+                -1, -1, -1, -1,
+                2,  2,  2, -1,
+                2, -1, -1, -1,
+                -1, -1, -1, -1,
+            },{
+                2,  2, -1, -1,
+                -1,  2, -1, -1,
+                -1,  2, -1, -1,
+                -1, -1, -1, -1,
+            },{
+                -1, -1, -1, -1,
+                -1, -1,  2, -1,
+                2,  2,  2, -1,
+                -1, -1, -1, -1,
+            },{
+                -1,  2, -1, -1,
+                -1,  2, -1, -1,
+                -1,  2,  2, -1,
+                -1, -1, -1, -1,
+            }};
+            db.emplace(L, colors);
+            
+            colors = {{
+                -1, -1, -1, -1,
+                3,  3,  3, -1,
+                -1, -1,  3, -1,
+                -1, -1, -1, -1,
+            },{
+                -1,  3, -1, -1,
+                -1,  3, -1, -1,
+                3,  3, -1, -1,
+                -1, -1, -1, -1,
+            },{
+                -1, -1, -1, -1,
+                3, -1, -1, -1,
+                3,  3,  3, -1,
+                -1, -1, -1, -1,
+            },{
+                -1,  3,  3, -1,
+                -1,  3, -1, -1,
+                -1,  3, -1, -1,
+                -1, -1, -1, -1,
+            }};
+            db.emplace(J, colors);
+
+            colors = {{
+                -1, -1, -1, -1,
+                -1,  4,  4, -1,
+                4,  4, -1, -1,
+                -1, -1, -1, -1,
+            },{
+                4, -1, -1, -1,
+                4,  4, -1, -1,
+                -1,  4, -1, -1,
+                -1, -1, -1, -1,
+            }};
+            db.emplace(S, colors);
+            
+            colors = {{
+                -1, -1, -1, -1,
+                5,  5, -1, -1,
+                -1,  5,  5, -1,
+                -1, -1, -1, -1,
+            },{
+                -1, -1,  5, -1,
+                -1,  5,  5, -1,
+                -1,  5, -1, -1,
+                -1, -1, -1, -1,
+            }};
+            db.emplace(Z, colors);
+            
+            colors = {{
+                -1, -1, -1, -1,
+                -1,  6,  6, -1,
+                -1,  6,  6, -1,
+                -1, -1, -1, -1,
+            }};
+            db.emplace(O, colors);
+
+            return db;
+        }
 
         inline int _getAre(const int& p_level, bool p_noLineCleared) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
@@ -219,136 +355,5 @@ class Blocks : public GameObject {
         /** Returns the number of rows travelled by a given amount of gravity */
         inline int _getRowsByGravity(const int& p_gravity) {
             return static_cast<int>(std::ceil(static_cast<float>(p_gravity) / static_cast<float>(256)));
-        }
-
-        inline std::vector<Block> _getBlocks(const TetrominoType& p_type, const int& p_rotation) {
-            // Tetromino map from: https://tetris.wiki/Arika_Rotation_System
-            std::vector<std::vector<int>> colors;
-            switch (p_type) {
-                case I:
-                    colors = {{
-                        -1, -1, -1, -1,
-                        0,  0,  0,  0,
-                        -1, -1, -1, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1, -1,  0, -1,
-                        -1, -1,  0, -1,
-                        -1, -1,  0, -1,
-                        -1, -1,  0, -1,
-                    }};
-                    break;
-                case T:
-                    colors = {{
-                        -1, -1, -1, -1,
-                        1,  1,  1, -1,
-                        -1,  1, -1, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1,  1, -1, -1,
-                        1,  1, -1, -1,
-                        -1,  1, -1, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1, -1, -1, -1,
-                        -1,  1, -1, -1,
-                        1,  1,  1, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1,  1, -1, -1,
-                        -1,  1,  1, -1,
-                        -1,  1, -1, -1,
-                        -1, -1, -1, -1,
-                    }};
-                    break;
-                case L:
-                    colors = {{
-                        -1, -1, -1, -1,
-                        2,  2,  2, -1,
-                        2, -1, -1, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        2,  2, -1, -1,
-                        -1,  2, -1, -1,
-                        -1,  2, -1, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1, -1, -1, -1,
-                        -1, -1,  2, -1,
-                        2,  2,  2, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1,  2, -1, -1,
-                        -1,  2, -1, -1,
-                        -1,  2,  2, -1,
-                        -1, -1, -1, -1,
-                    }};
-                    break;
-                case J:
-                    colors = {{
-                        -1, -1, -1, -1,
-                        3,  3,  3, -1,
-                        -1, -1,  3, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1,  3, -1, -1,
-                        -1,  3, -1, -1,
-                        3,  3, -1, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1, -1, -1, -1,
-                        3, -1, -1, -1,
-                        3,  3,  3, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1,  3,  3, -1,
-                        -1,  3, -1, -1,
-                        -1,  3, -1, -1,
-                        -1, -1, -1, -1,
-                    }};
-                    break;
-                case S:
-                    colors = {{
-                        -1, -1, -1, -1,
-                        -1,  4,  4, -1,
-                        4,  4, -1, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        4, -1, -1, -1,
-                        4,  4, -1, -1,
-                        -1,  4, -1, -1,
-                        -1, -1, -1, -1,
-                    }};
-                    break;
-                case Z:
-                    colors = {{
-                        -1, -1, -1, -1,
-                        5,  5, -1, -1,
-                        -1,  5,  5, -1,
-                        -1, -1, -1, -1,
-                    },{
-                        -1, -1,  5, -1,
-                        -1,  5,  5, -1,
-                        -1,  5, -1, -1,
-                        -1, -1, -1, -1,
-                    }};
-                    break;
-                case O:
-                    colors = {{
-                        -1, -1, -1, -1,
-                        -1,  6,  6, -1,
-                        -1,  6,  6, -1,
-                        -1, -1, -1, -1,
-                    }};
-                    break;
-            }
-
-            std::vector<Blocks::Block> blocks;
-            std::vector<int> colorsAtRotation = colors.at(p_rotation % colors.size());
-            for (size_t i = 0; i < colorsAtRotation.size(); i++) {
-                blocks.push_back(Block(colorsAtRotation.at(i)));
-            }
-
-            return blocks;
         }
 };
