@@ -24,7 +24,7 @@ ControlTester::~ControlTester() {
 }
 
 
-void ControlTester::_updateDebugTf(const double& p_deltaTime) {
+void ControlTester::_updateDebugTf(const double&) {
     // Put TF in bottom left corner
     _debugTf->setPosition(0, Scene::sceneHeight - 20);
 

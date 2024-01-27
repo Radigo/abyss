@@ -24,7 +24,7 @@ _game(p_game)
     _debugTfIndex = _debugTf->addTexture(Renderer::createDisplayableText("0000000000", Types::getFont(Types::Fonts::Regular)));
     _debugTf->setPosition(0, 60);
 
-    _updater = new Updatable(this, [this](const double& p_deltaTime){ _drawData(); });
+    _updater = new Updatable(this, [this](const double&){ _drawData(); });
 }
 
 BlocksDataView::~BlocksDataView() {
@@ -40,7 +40,7 @@ void BlocksDataView::_drawData() {
     // Draw level
     int level = _game->getLevel();
     int levelMilestone = ((level / 100) * 100) + 100;
-    std:string message = to_string(level) + "/" + to_string(levelMilestone);
+    std::string message = to_string(level) + "/" + to_string(levelMilestone);
     _levelTf->updateTexture(_levelTfIndex, Renderer::createDisplayableText(message, Types::getFont(Types::Fonts::Regular)));
 
     // Draw debug

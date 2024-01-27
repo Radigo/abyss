@@ -9,6 +9,7 @@ Controls to move with fancy rules
 Lines clear when rows are full
 */
 
+#include <cmath>
 #include <vector>
 
 #include "engine/gameobject.hpp"

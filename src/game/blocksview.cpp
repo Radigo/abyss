@@ -16,7 +16,7 @@ _cellSize(p_cellSize),
 _game(p_game)
 {
     _display = new Displayable(this);
-    _updater = new Updatable(this, [this](const double& p_deltaTime){ _drawPlayfield(); });
+    _updater = new Updatable(this, [this](const double&){ _drawPlayfield(); });
 }
 
 BlocksView::~BlocksView() {
