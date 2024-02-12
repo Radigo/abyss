@@ -34,7 +34,7 @@ class Bot {
             /** The successive directions we need to crawl through this horizon */
             std::vector<HorizonCrawlerDirection> data;
 
-            size_t startAltitude;
+            size_t startAltitude = 0;
 
             /** The average altitude of this horizon */
             inline float getAltitude() {

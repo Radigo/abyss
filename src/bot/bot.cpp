@@ -53,6 +53,37 @@ std::vector<std::vector<int>> Bot::getDebugTarget() {
 
 // Generic visualization of the horizon on the playfield
 std::vector<std::vector<int>> Bot::getDebugHorizon() {
+    // Create a grid of playfield size
+    auto playfield = _game->getPlayfield();
+
+    std::vector<int> horizonRow(playfield.at(0).size(), -1);
+    std::vector<std::vector<int>> horizonData(playfield.size(), horizonRow);
+
+    size_t rowIndex = _debugHorizon.startAltitude;
+    size_t colIndex = 0;
+    horizonData.at(rowIndex).at(colIndex) = 1;
+    // Crawl through horizon data and fill up grid
+    for (HorizonCrawlerDirection crawlingData : _debugHorizon.data) {
+        switch (crawlingData) {
+            case Up:
+                rowIndex--;
+                break;
+            case Down:
+                rowIndex++;
+                break;
+            case Left:
+                colIndex--;
+                break;
+            case Right:
+                colIndex++;
+                break;
+            case EndPlayfield:
+                return horizonData;
+        }
+
+        horizonData.at(rowIndex).at(colIndex) = 1;
+    }
+
     return {};
 }
 
@@ -108,7 +139,7 @@ Bot::Target Bot::_getTarget(const Blocks::TetrominoType& p_piece) {
             for (size_t colIdx = 0; colIdx < playfield.at(rowIdx).size(); colIdx++) {
                 // We shift the piece to be able to test it in all configurations
                 int pieceX = colIdx - 2;
-                int pieceY = rowIdx - 1;
+                int pieceY = rowIdx - 2;// Generic playfield has no buffer row, we need to test the piece 1 row higher
                 if (_game->isPiecePositionValid(nextBlocksAtRotation, pieceX, pieceY)) {
                     // Make a copy of the playfield
                     auto testPlayfield = playfield;
@@ -150,12 +181,13 @@ Bot::Horizon Bot::_getHorizon(const std::vector<std::vector<std::pair<int, float
     Horizon newHorizon;
 
     // Crawl through each block (left to right) to determine the horizon
-    // Find the first free cell starting from the bottom left
     size_t i = 0;
-    size_t j = p_playfield.size() - 1;
-    while ((p_playfield.at(j).at(0).first > -1) && (j > 0)) {
-        j--;
+    size_t j = 0;
+    while ((p_playfield.at(j).at(0).first < 0) && (j < p_playfield.size() - 1)) {
+        j++;
     }
+
+    newHorizon.startAltitude = j;
 
     auto checkNextCells = [p_playfield](const size_t& p_colIdx, const size_t& p_rowIdx){
         //SDL_Log("checkNextCells %zu, %zu", p_colIdx, p_rowIdx);
@@ -189,7 +221,8 @@ Bot::Horizon Bot::_getHorizon(const std::vector<std::vector<std::pair<int, float
 
     while (nextDirection != HorizonCrawlerDirection::EndPlayfield) {
         // Infinite loop check
-        if ((newHorizon.data.size() > 1) && (nextDirection == newHorizon.data.at(newHorizon.data.size() - 2))) {
+        if ((newHorizon.data.size() > 1) && (nextDirection != newHorizon.data.at(newHorizon.data.size() - 1)) && (nextDirection == newHorizon.data.at(newHorizon.data.size() - 2))) {
+            newHorizon.data.push_back(EndPlayfield);
             break;// ToDo: Deal with this (later)
         }
         newHorizon.data.push_back(nextDirection);
@@ -207,6 +240,7 @@ Bot::Horizon Bot::_getHorizon(const std::vector<std::vector<std::pair<int, float
                 i += 1;
                 break;
             case EndPlayfield:
+                newHorizon.data.push_back(EndPlayfield);
                 break;
         }
         nextDirection = checkNextCells(i, j);

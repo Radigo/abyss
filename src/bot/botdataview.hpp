@@ -24,4 +24,5 @@ class BotDataView : public GameObject {
         Updatable* _updater;
 
         void _drawData();
+        Displayable::Color _getBlockColor(const int& p_colorIndex);
 };
