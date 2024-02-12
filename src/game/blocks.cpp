@@ -83,10 +83,10 @@ std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
             int pieceColor = activePieceBlocks.at(i).colorIndex;
             if (pieceColor < 0) // Ignore empty cells
                 continue;
-            size_t blockX = _activePiece->getX() + (i % 4);
-            size_t blockY = _activePiece->getY() + (i / 4) - BUFFER_ROWS;
-            if ((blockY >= 0) && (blockY < _playfield.size())) {
-                if ((blockX >= 0) && (blockX < _playfield.at(blockY).size())) {
+            int blockX = _activePiece->getX() + (i % 4);
+            int blockY = _activePiece->getY() + (i / 4) - BUFFER_ROWS;
+            if ((blockY >= 0) && (blockY < static_cast<int>(_playfield.size()))) {
+                if ((blockX >= 0) && (blockX < static_cast<int>(_playfield.at(blockY).size()))) {
                     playfieldView.at(blockY).at(blockX) = std::make_pair(pieceColor, lockRatio);
                 }
             }
@@ -127,9 +127,9 @@ bool Blocks::isPiecePositionValid(std::vector<Block> p_pieceBlocks, const int& p
         int blockX = p_x + (i % 4);
         int blockY = p_y + (i / 4);
         if ((blockY < 0)
-            || (blockY >= _playfield.size())
+            || (blockY >= static_cast<int>(_playfield.size()))
             || (blockX < 0)
-            || (blockX >= _playfield.at(blockY).size())) {
+            || (blockX >= static_cast<int>(_playfield.at(blockY).size()))) {
                 //SDL_Log("> OOB!");
                 return false;
         }
@@ -152,6 +152,7 @@ void Blocks::_updateGame(const double&) {
             // We pick a piece and place it on the playfield
             // Wait for ARE
             if (_frameTick < _getAre(_level, _clearedLines.empty())) {
+                inpState = _input->getInputState();
                 // DAS buffer
                 if (inpState & Controllable::LEFT) {
                     _dasCounter--;
@@ -268,7 +269,7 @@ void Blocks::_updateGame(const double&) {
             pieceTotalGravityAvailable = gravity;
 
             // We test where the piece will be if it's affected by gravity
-            for (int i = 0; i <= _getRowsByGravity(gravity); i++) {
+            for (size_t i = 0; i <= _getRowsByGravity(gravity); i++) {
                 if (!isPiecePositionValid(getBlocks(_activePiece->getType(), pieceRotation), piecePositionX, piecePositionY + i)) {
                     pieceTotalGravityAvailable = (i - 1) * 256;
                     break;
@@ -340,24 +341,9 @@ Blocks::TetrominoType Blocks::_pickNextTetromino(bool p_firstDraw) {
     size_t retry = 0;
     size_t numRetries = 4;// TGM1 rule
 
-    for (size_t i = 0; i < activePieceBlocks.size(); i++) {
-        int pieceColor = activePieceBlocks.at(i).colorIndex;
-        SDL_Log("%zu, %d;%d, %d;%d = %d", i, _activePiece->getX(), _activePiece->getY(), p_x + (i % 4), p_y + (i / 4), pieceColor);
-        if (pieceColor < 0) // Ignore empty cells
-            continue;
-        size_t blockX = p_x + (i % 4);
-        size_t blockY = p_y + (i / 4);
-        if ((blockY < 0)
-            || (blockY >= _playfield.size())
-            || (blockX < 0)
-            || (blockX >= _playfield.at(blockY).size())) {
-                SDL_Log("> OOB!");
-                return false;
-        }
-        if (_playfield.at(blockY).at(blockX).colorIndex >= 0) {
-            SDL_Log("> block collision!");
-            return false;
-        }
+    while (std::find(_history.begin(), _history.end(), next) != _history.end() && retry <= numRetries) {
+        next = static_cast<TetrominoType>(rand() % sampleSize);
+        retry++;
     }
 
     // Update history

@@ -117,7 +117,7 @@ void Scene::createBlocksWindow(const int p_version, const int p_startLevel, cons
 
     if (p_isPlayedByBot) {
         Bot* bot = new Bot(blocks);
-        BotDataView* botDataView = new BotDataView(blocksView, blocks, bot, cellSize);
+        /*BotDataView* botDataView = */new BotDataView(blocksView, blocks, bot, cellSize);
     }
 
     window->setPosition(randX, randY);

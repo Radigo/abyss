@@ -56,7 +56,7 @@ std::vector<std::vector<int>> Bot::getDebugHorizon() {
     return {};
 }
 
-void Bot::_updateBot(const double& p_frameDeltaTime) {
+void Bot::_updateBot(const double&) {
     switch (_game->getState()) {
         case Blocks::SPAWN_TETROMINO:
             if (_game->getFrameTick() == 1) {
@@ -120,8 +120,8 @@ Bot::Target Bot::_getTarget(const Blocks::TetrominoType& p_piece) {
                             continue;
                         int blockX = pieceX + (i % 4);
                         int blockY = pieceY + (i / 4);
-                        if ((blockY >= 0) && (blockY < testPlayfield.size())) {
-                            if ((blockX >= 0) && (blockX < testPlayfield.at(blockY).size())) {
+                        if ((blockY >= 0) && (blockY < static_cast<int>(testPlayfield.size()))) {
+                            if ((blockX >= 0) && (blockX < static_cast<int>(testPlayfield.at(blockY).size()))) {
                                 testPlayfield.at(blockY).at(blockX) = std::make_pair(pieceColor, 0.0f);
                             }
                         }
@@ -219,14 +219,14 @@ Bot::Horizon Bot::_getHorizon(const std::vector<std::vector<std::pair<int, float
 /** Returns the list of all inputs until the piece locks
  * Returned data are the input value frame by frame
 */
-std::vector<int> Bot::_generateInputs(const std::vector<std::vector<std::pair<int, float>>>& p_playfield, const Target& p_target, const int& p_numFrames) {
+std::vector<int> Bot::_generateInputs(const std::vector<std::vector<std::pair<int, float>>>& /*p_playfield*/, const Target& p_target, const int& p_numFrames) {
     std::vector<int> inputs;
 
     // Aim for target x, y and rotation
     int currentX = _game->getSpawnX();
     int currentRotation = 0;
 
-    for (size_t i = 0; i < p_numFrames; i++) {
+    for (int i = 0; i < p_numFrames; i++) {
         bool canLock = (currentX == p_target.x) && (currentRotation == p_target.rotation);
         if (i % 10 == 0) {
             // Rotate until reaching target

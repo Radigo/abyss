@@ -11,6 +11,7 @@ Lines clear when rows are full
 
 #include <cmath>
 #include <vector>
+#include <unordered_map>
 
 #include "engine/gameobject.hpp"
 
@@ -80,8 +81,8 @@ class Blocks : public GameObject {
 
         size_t _frameTick;// Our main internal time counter for each state
         int _irsRotation;// Initial rotation value
-        int _dasCounter;// Delayed Auto Shift (holding direction)
-        int _lockCounter;// Lock delay
+        size_t _dasCounter;// Delayed Auto Shift (holding direction)
+        size_t _lockCounter;// Lock delay
         bool _btnIsReleased[3];
         std::vector<TetrominoType> _history;
 
@@ -249,7 +250,7 @@ class Blocks : public GameObject {
             return db;
         }
 
-        inline int _getAre(const int& p_level, bool p_noLineCleared) {
+        inline size_t _getAre(const int& p_level, bool p_noLineCleared) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
             if (_version == 2) {
                 // TAP
@@ -273,7 +274,7 @@ class Blocks : public GameObject {
             return 30;
         }
         
-        inline int _getDas(const int& p_level) {
+        inline size_t _getDas(const int& p_level) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
             if (_version == 2) {
                 // TAP
@@ -288,7 +289,7 @@ class Blocks : public GameObject {
             return 16;
         }
         
-        inline int _getLockDelay(const int& p_level) {
+        inline size_t _getLockDelay(const int& p_level) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
             if (_version == 2) {
                 // TAP
@@ -303,7 +304,7 @@ class Blocks : public GameObject {
             return 30;
         }
         
-        inline int _getLineClear(const int& p_level) {
+        inline size_t _getLineClear(const int& p_level) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
             if (_version == 2) {
                 // TAP
@@ -318,7 +319,7 @@ class Blocks : public GameObject {
             return 41;
         }
         
-        inline int _getGravity(const int& p_level) {
+        inline size_t _getGravity(const int& p_level) {
             // As in: https://tetris.wiki/Tetris_The_Grand_Master
             // Same for TGM and TAP
             if (p_level >= 500) return GRAVITY_1_G * 20;// 20G
@@ -354,7 +355,7 @@ class Blocks : public GameObject {
         }
 
         /** Returns the number of rows travelled by a given amount of gravity */
-        inline int _getRowsByGravity(const int& p_gravity) {
+        inline size_t _getRowsByGravity(const int& p_gravity) {
             return static_cast<int>(std::ceil(static_cast<float>(p_gravity) / static_cast<float>(256)));
         }
 };

@@ -22,7 +22,7 @@ _cellSize(p_cellSize)
     _horizon = new Displayable(this);
     _horizon->setPosition(0, 0);
 
-    _updater = new Updatable(this, [this](const double& p_deltaTime){ _drawData(); });
+    _updater = new Updatable(this, [this](const double&){ _drawData(); });
 }
 
 BotDataView::~BotDataView() {
