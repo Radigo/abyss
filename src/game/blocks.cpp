@@ -65,11 +65,10 @@ Blocks::~Blocks() {
 std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
     std::vector<std::vector<std::pair<int, float>>> playfieldView;
 
-    // Start after BUFFER_ROWS
-    for (size_t rowIdx = BUFFER_ROWS; rowIdx < _playfield.size(); rowIdx++) {
+    for (size_t rowIdx = 0; rowIdx < _playfield.size(); rowIdx++) {
         std::vector<std::pair<int, float>> rowView;
         for (auto column : _playfield.at(rowIdx)) {
-            rowView.push_back(std::make_pair(column.colorIndex, 1.0f));
+            rowView.push_back(std::make_pair(column.colorIndex, rowIdx > BUFFER_ROWS ? 1.0f : 0.0f));
         }
         playfieldView.push_back(rowView);
     }
@@ -84,7 +83,7 @@ std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
             if (pieceColor < 0) // Ignore empty cells
                 continue;
             int blockX = _activePiece->getX() + (i % 4);
-            int blockY = _activePiece->getY() + (i / 4) - BUFFER_ROWS;
+            int blockY = _activePiece->getY() + (i / 4);
             if ((blockY >= 0) && (blockY < static_cast<int>(_playfield.size()))) {
                 if ((blockX >= 0) && (blockX < static_cast<int>(_playfield.at(blockY).size()))) {
                     playfieldView.at(blockY).at(blockX) = std::make_pair(pieceColor, lockRatio);
@@ -94,28 +93,6 @@ std::vector<std::vector<std::pair<int, float>>> Blocks::getPlayfield() {
     }
 
     return playfieldView;
-}
-
-// Returns a generic representation of the next piece
-std::string Blocks::getNextStr() {
-    switch (_nextTetromino) {
-        case I:
-            return "I";
-        case O:
-            return "O";
-        case S:
-            return "S";
-        case Z:
-            return "Z";
-        case J:
-            return "J";
-        case L:
-            return "L";
-        case T:
-            return "T";
-    }
-
-    return "";
 }
 
 bool Blocks::isPiecePositionValid(std::vector<Block> p_pieceBlocks, const int& p_x, const int& p_y) {
@@ -241,20 +218,25 @@ void Blocks::_updateGame(const double&) {
             }
             // Horizontal move
             if (inpState & Controllable::LEFT) {
-                if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
-                    if (isPiecePositionValid(getBlocks(_activePiece->getType(), pieceRotation), piecePositionX - 1, piecePositionY))
+                if ((_dasCounter == _getDas(_level)) || (_dasCounter == 0)) {
+                    if (isPiecePositionValid(getBlocks(_activePiece->getType(), pieceRotation), piecePositionX - 1, piecePositionY)) {
                         piecePositionX -= 1;
+                    }
                 }
-                _dasCounter--;
+                if (_dasCounter > 0)
+                    _dasCounter--;
             } else if (inpState & Controllable::RIGHT) {
-                if ((_dasCounter == _getDas(_level)) || (_dasCounter <= 0)) {
-                    if (isPiecePositionValid(getBlocks(_activePiece->getType(), pieceRotation), piecePositionX + 1, piecePositionY))
+                if ((_dasCounter == _getDas(_level)) || (_dasCounter == 0)) {
+                    if (isPiecePositionValid(getBlocks(_activePiece->getType(), pieceRotation), piecePositionX + 1, piecePositionY)) {
                         piecePositionX += 1;
+                    }
                 }
-                _dasCounter--;
+                if (_dasCounter > 0)
+                    _dasCounter--;
             } else {
                 _dasCounter = _getDas(_level);
             }
+
             // Vertical drop
             // For some reason GRAVITY_1_G (or Blocks::GRAVITY_1_G) doesn't compile here
             gravity = _getGravity(_level);

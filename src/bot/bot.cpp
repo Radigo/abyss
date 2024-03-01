@@ -43,7 +43,7 @@ std::vector<std::vector<int>> Bot::getDebugTarget() {
     for (size_t i = 0; i < nextBlocks.size(); i++) {
         if (nextBlocks.at(i).colorIndex >= 0) {
             int blockX = _debugTarget.x + (i % 4);
-            int blockY = _debugTarget.y + (i / 4) - Blocks::BUFFER_ROWS;
+            int blockY = _debugTarget.y + (i / 4);
             targetCoordinates[blockY][blockX] = nextBlocks.at(i).colorIndex;
         }
     }
@@ -59,32 +59,11 @@ std::vector<std::vector<int>> Bot::getDebugHorizon() {
     std::vector<int> horizonRow(playfield.at(0).size(), -1);
     std::vector<std::vector<int>> horizonData(playfield.size(), horizonRow);
 
-    size_t rowIndex = _debugHorizon.startAltitude;
-    size_t colIndex = 0;
-    horizonData.at(rowIndex).at(colIndex) = 1;
-    // Crawl through horizon data and fill up grid
-    for (HorizonCrawlerDirection crawlingData : _debugHorizon.data) {
-        switch (crawlingData) {
-            case Up:
-                rowIndex--;
-                break;
-            case Down:
-                rowIndex++;
-                break;
-            case Left:
-                colIndex--;
-                break;
-            case Right:
-                colIndex++;
-                break;
-            case EndPlayfield:
-                return horizonData;
-        }
-
-        horizonData.at(rowIndex).at(colIndex) = 1;
+    for (HorizonCrawler crawlingData : _debugHorizon.data) {
+        horizonData.at(crawlingData.getY()).at(crawlingData.getX()) = 1;
     }
 
-    return {};
+    return horizonData;
 }
 
 void Bot::_updateBot(const double&) {
@@ -117,9 +96,10 @@ void Bot::_updateBot(const double&) {
  * Returned data are the coordinates of the piece x & y, and the rotation value
 */
 Bot::Target Bot::_getTarget(const Blocks::TetrominoType& p_piece) {
-    // A brute force method:
-    // 1 - list all possibilities of valid piece positions on the playfield
-    // 2 - Keep the one that has the best horizon
+    // Refined brute force method:
+    // 1 - Get the horizon
+    // 2 - list all possibilities of valid piece positions on the horizon
+    // 3 - Keep the one that has the best horizon
 
     /* Horizon is the line formed on top of the stack
     The shorter the better
@@ -129,103 +109,147 @@ Bot::Target Bot::_getTarget(const Blocks::TetrominoType& p_piece) {
     std::vector<std::vector<std::pair<int, float>>> playfield = _game->getPlayfield();
 
     // Get a current verison of the horizon
-    Horizon prevHorizon;
+    _debugHorizon = _getHorizon(playfield, true);
+    // Make a copy of it
+    std::vector<HorizonCrawler> horizonDataCopy;
+    horizonDataCopy.assign(_debugHorizon.data.begin(), _debugHorizon.data.end());
     Target target;
     target.type = p_piece;
 
+    SDL_Log("<Bot::_getTarget>");
+
     for (size_t rotation = 0; rotation < _game->getNumPossibleRotations(p_piece); rotation++) {
         std::vector<Blocks::Block> nextBlocksAtRotation = _game->getBlocks(p_piece, rotation);
-        for (size_t rowIdx = 0; rowIdx < playfield.size(); rowIdx++) {
-            for (size_t colIdx = 0; colIdx < playfield.at(rowIdx).size(); colIdx++) {
-                // We shift the piece to be able to test it in all configurations
-                int pieceX = colIdx - 2;
-                int pieceY = rowIdx - 2;// Generic playfield has no buffer row, we need to test the piece 1 row higher
-                if (_game->isPiecePositionValid(nextBlocksAtRotation, pieceX, pieceY)) {
-                    // Make a copy of the playfield
-                    auto testPlayfield = playfield;
-                    // Add tested piece to the playfield
-                    for (size_t i = 0; i < nextBlocksAtRotation.size(); i++) {
-                        //SDL_Log("%zu, %d, %zu, %d, %zu", i, _activePiece->getX(), (i % 4), _activePiece->getY(), (i / 4));
-                        int pieceColor = nextBlocksAtRotation.at(i).colorIndex;
-                        if (pieceColor < 0) // Ignore empty cells
-                            continue;
-                        int blockX = pieceX + (i % 4);
-                        int blockY = pieceY + (i / 4);
-                        if ((blockY >= 0) && (blockY < static_cast<int>(testPlayfield.size()))) {
-                            if ((blockX >= 0) && (blockX < static_cast<int>(testPlayfield.at(blockY).size()))) {
-                                testPlayfield.at(blockY).at(blockX) = std::make_pair(pieceColor, 0.0f);
+
+        for (HorizonCrawler horizonData : horizonDataCopy) {
+            // Get the 4 possible positions of the piece with this rotation for this coordinates in the horizon
+            for (size_t i = 0; i < nextBlocksAtRotation.size(); i++) {
+                if (nextBlocksAtRotation.at(i).colorIndex >= 0) {
+                    int pieceX = horizonData.getX() - (i % 4);
+                    int pieceY = horizonData.getY() - (i / 4);
+
+                    if (_game->isPiecePositionValid(nextBlocksAtRotation, pieceX, pieceY)) {
+                        // Make a copy of the playfield
+                        // ToDo: try to get rid of this copy...
+                        auto testPlayfield = playfield;
+                        // Add tested piece to the playfield
+                        for (size_t i = 0; i < nextBlocksAtRotation.size(); i++) {
+                            //SDL_Log("%zu, %d, %zu, %d, %zu", i, _activePiece->getX(), (i % 4), _activePiece->getY(), (i / 4));
+                            int pieceColor = nextBlocksAtRotation.at(i).colorIndex;
+                            if (pieceColor < 0) // Ignore empty cells
+                                continue;
+                            int blockX = pieceX + (i % 4);
+                            int blockY = pieceY + (i / 4);
+                            if ((blockY >= 0) && (blockY < static_cast<int>(testPlayfield.size()))) {
+                                if ((blockX >= 0) && (blockX < static_cast<int>(testPlayfield.at(blockY).size()))) {
+                                    testPlayfield.at(blockY).at(blockX) = std::make_pair(pieceColor, 0.0f);
+                                }
                             }
                         }
-                    }
-                    // Get horizon
-                    Horizon newHorizon = _getHorizon(testPlayfield);
-                    // Compare with previous
-                    if (newHorizon < prevHorizon) {
-                        // Save for debug
-                        _debugHorizon = newHorizon;
+                        // Get horizon
+                        Horizon newHorizon = _getHorizon(testPlayfield, false);
 
-                        // If smaller, save piece position in target
-                        target.x = pieceX;
-                        target.y = pieceY;
-                        target.rotation = rotation;
+                        SDL_Log("newHorizon with %s @ %d:%d %zu altitude: %f, length: %zu", _game->getPieceTypeStr(p_piece).c_str(), pieceX, pieceY, rotation, newHorizon.getAltitude(), newHorizon.data.size());
+
+                        // Compare with previous
+                        if (newHorizon < _debugHorizon) {
+                            SDL_Log("Saving better horizon than previous altitude: %f, length: %zu", _debugHorizon.getAltitude(), _debugHorizon.data.size());
+                            // Save for debug
+                            _debugHorizon = newHorizon;
+
+                            // If smaller, save piece position in target
+                            target.x = pieceX;
+                            target.y = pieceY;
+                            target.rotation = rotation;
+                        }
                     }
                 }
             }
         }
     }
 
+    SDL_Log("target: %d;%d %d", target.x, target.y, target.rotation);
+
     return target;
 }
 
-Bot::Horizon Bot::_getHorizon(const std::vector<std::vector<std::pair<int, float>>>& p_playfield) {
+Bot::Horizon Bot::_getHorizon(const std::vector<std::vector<std::pair<int, float>>>& p_playfield, bool p_init) {
     Horizon newHorizon;
+    newHorizon.isInit = p_init;
 
     // Crawl through each block (left to right) to determine the horizon
+    int startAltitude = p_playfield.size() - 1;
     size_t i = 0;
     size_t j = 0;
-    while ((p_playfield.at(j).at(0).first < 0) && (j < p_playfield.size() - 1)) {
+    while (j < startAltitude) {
+        if (p_playfield.at(j + 1).at(0).first >= 0) {
+            break;
+        }
         j++;
     }
 
-    newHorizon.startAltitude = j;
+    auto isCellInPlayfield = [p_width = p_playfield.at(0).size(), p_height = p_playfield.size()](HorizonCrawler& p_crawler){
+        return (p_crawler.getX() >= 0) && (p_crawler.getX() < p_width) && (p_crawler.getY() >= 0) && (p_crawler.getY() < p_height);
+    };
 
-    auto checkNextCells = [p_playfield](const size_t& p_colIdx, const size_t& p_rowIdx){
+    auto hasReachedEndPlayfield = [p_width = p_playfield.at(0).size()](HorizonCrawler& p_crawler){
+        return (p_crawler.getX() < 0) || (p_crawler.getX() >= p_width) || (p_crawler.getY() < 0);
+    };
+
+    auto checkNextCells = [p_playfield, isCellInPlayfield, hasReachedEndPlayfield](HorizonCrawler p_crawler){
         //SDL_Log("checkNextCells %zu, %zu", p_colIdx, p_rowIdx);
+
         // Check right
-        if (p_colIdx + 1 > p_playfield.at(p_rowIdx).size() - 1) {
+        HorizonCrawler right = p_crawler.getRight();
+        if (hasReachedEndPlayfield(right)) {
             return HorizonCrawlerDirection::EndPlayfield;
-        } else if (p_playfield.at(p_rowIdx).at(p_colIdx + 1).first < 0) {
-            return HorizonCrawlerDirection::Right;
+        } else if (isCellInPlayfield(right) && (p_playfield.at(right.getY()).at(right.getX()).first < 0)) {
+            return right.getDirection();
         }
-        // Check down
-        if ((p_rowIdx + 1 <= p_playfield.size() - 1) && (p_playfield.at(p_rowIdx + 1).at(p_colIdx).first < 0)) {
-            return HorizonCrawlerDirection::Down;
-        }
-        // Check up
-        if (p_rowIdx == 0) {
+        // Check forward
+        HorizonCrawler forward = p_crawler.getForward();
+        if (hasReachedEndPlayfield(forward)) {
             return HorizonCrawlerDirection::EndPlayfield;
-        } else if (p_playfield.at(p_rowIdx - 1).at(p_colIdx).first < 0) {
-            return HorizonCrawlerDirection::Up;
+        } else if (isCellInPlayfield(forward) && (p_playfield.at(forward.getY()).at(forward.getX()).first < 0)) {
+            return forward.getDirection();
         }
         // Check left
-        if (p_colIdx == 0) {
+        HorizonCrawler left = p_crawler.getLeft();
+        if (hasReachedEndPlayfield(left)) {
             return HorizonCrawlerDirection::EndPlayfield;
-        } else if (p_playfield.at(p_rowIdx).at(p_colIdx - 1).first < 0) {
-            return HorizonCrawlerDirection::Left;
+        } else if (isCellInPlayfield(left) && (p_playfield.at(left.getY()).at(left.getX()).first < 0)) {
+            return left.getDirection();
         }
-
+        // Check back
+        HorizonCrawler back = p_crawler.getBack();
+        if (hasReachedEndPlayfield(back)) {
+            return HorizonCrawlerDirection::EndPlayfield;
+        } else if (isCellInPlayfield(back) && (p_playfield.at(back.getY()).at(back.getX()).first < 0)) {
+            return back.getDirection();
+        }
+        // Not supposed to happen
         return HorizonCrawlerDirection::EndPlayfield;
     };
 
-    HorizonCrawlerDirection nextDirection = checkNextCells(i, j);
+    HorizonCrawler crawler = HorizonCrawler(i, j, HorizonCrawlerDirection::Right);
+    HorizonCrawlerDirection nextDirection = checkNextCells(crawler);
+    //SDL_Log("Init nextDirection: %d", nextDirection);
 
     while (nextDirection != HorizonCrawlerDirection::EndPlayfield) {
         // Infinite loop check
-        if ((newHorizon.data.size() > 1) && (nextDirection != newHorizon.data.at(newHorizon.data.size() - 1)) && (nextDirection == newHorizon.data.at(newHorizon.data.size() - 2))) {
-            newHorizon.data.push_back(EndPlayfield);
-            break;// ToDo: Deal with this (later)
+        if (!newHorizon.data.empty()) {
+            // Simply check if this crawler already exists (it means we already went through this cell)
+            for (HorizonCrawler crawler : newHorizon.data) {
+                if ((crawler.getX() == i) &&
+                    (crawler.getY() == j) &&
+                    (crawler.getDirection() == nextDirection)) {
+                        newHorizon.data.push_back(EndPlayfield);
+                        break;
+                    }
+            }
         }
-        newHorizon.data.push_back(nextDirection);
+
+        newHorizon.data.push_back(HorizonCrawler(i, j, nextDirection));
         switch (nextDirection) {
             case Up:
                 j -= 1;
@@ -240,13 +264,13 @@ Bot::Horizon Bot::_getHorizon(const std::vector<std::vector<std::pair<int, float
                 i += 1;
                 break;
             case EndPlayfield:
-                newHorizon.data.push_back(EndPlayfield);
                 break;
         }
-        nextDirection = checkNextCells(i, j);
+        nextDirection = checkNextCells(HorizonCrawler(i, j, nextDirection));
         //SDL_Log("nextDirection: %d", nextDirection);
     }
 
+    newHorizon.data.push_back(HorizonCrawler(i, j, nextDirection));
     return newHorizon;
 }
 

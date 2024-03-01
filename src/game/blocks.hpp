@@ -37,6 +37,7 @@ class Blocks : public GameObject {
         struct Block {
             Block(const int& p_color = -1) :
             colorIndex(p_color) {}
+            ~Block() {}
             int colorIndex = -1;
         };
 
@@ -94,7 +95,6 @@ class Blocks : public GameObject {
         ~Blocks();
 
         std::vector<std::vector<std::pair<int, float>>> getPlayfield();
-        std::string getNextStr();
         bool isPiecePositionValid(std::vector<Block> p_pieceBlocks, const int& p_x, const int& p_y);
 
         inline void setLevel(const int p_level) { _level = p_level; }
@@ -116,6 +116,26 @@ class Blocks : public GameObject {
         }
         inline size_t getNumPossibleRotations(const TetrominoType& p_type) {
             return _blocksDb.at(p_type).size();
+        }
+        inline std::string getPieceTypeStr(TetrominoType p_type) {
+            switch (p_type) {
+                case I:
+                    return "I";
+                case O:
+                    return "O";
+                case S:
+                    return "S";
+                case Z:
+                    return "Z";
+                case J:
+                    return "J";
+                case L:
+                    return "L";
+                case T:
+                    return "T";
+            }
+
+            return "";
         }
 
     private:

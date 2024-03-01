@@ -98,7 +98,7 @@ void Scene::createBlocksWindow(const int p_version, const int p_startLevel, cons
     std::string windowId = "Blocks " + to_string(_windows.size());
     int cellSize = 16;
     int width = cellSize * p_numColumns + 100;
-    int height = cellSize * p_numRows + 36;
+    int height = cellSize * (p_numRows + Blocks::BUFFER_ROWS) + 36;
     int dataViewX = cellSize * p_numColumns + 20;
     int randX = rand() % (Scene::sceneWidth - width);
     int randY = rand() % (Scene::sceneHeight - height);

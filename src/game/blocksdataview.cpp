@@ -33,7 +33,7 @@ BlocksDataView::~BlocksDataView() {
 
 void BlocksDataView::_drawData() {
     // Draw next piece
-    std::string nextStr = _game->getNextStr();
+    std::string nextStr = _game->getPieceTypeStr(_game->getNext());
     Displayable::Color nextColor = _getBlockColor(nextStr);
     _nextTf->updateTexture(_nextTfIndex, Renderer::createDisplayableText("NEXT: " + nextStr, Types::getFont(Types::Fonts::Regular), nextColor));
 

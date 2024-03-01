@@ -28,7 +28,7 @@ void BlocksView::_drawPlayfield() {
 
     const auto gamePlayfield = _game->getPlayfield();
 
-    for (size_t rowIdx = 0; rowIdx < gamePlayfield.size(); rowIdx++) {
+    for (size_t rowIdx = Blocks::BUFFER_ROWS; rowIdx < gamePlayfield.size(); rowIdx++) {
         auto row = gamePlayfield.at(rowIdx);
         for (size_t colIdx = 0; colIdx < row.size(); colIdx++) {
             Displayable::Color cellColor = _getBlockColor(row.at(colIdx));

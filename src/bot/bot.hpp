@@ -16,10 +16,10 @@ class Bot {
 
     private:
         enum HorizonCrawlerDirection {
-            Up,
+            Right,
             Down,
             Left,
-            Right,
+            Up,
             EndPlayfield
         };
 
@@ -30,45 +30,106 @@ class Bot {
             int rotation = 0;
         };
 
-        struct Horizon {
-            /** The successive directions we need to crawl through this horizon */
-            std::vector<HorizonCrawlerDirection> data;
+        struct HorizonCrawler {
+            HorizonCrawler(const int& p_x = -1, const int& p_y = -1, const HorizonCrawlerDirection& p_direction = EndPlayfield) :
+            _x(p_x),
+            _y(p_y),
+            _direction(p_direction) {};
+            int _x;
+            int _y;
+            HorizonCrawlerDirection _direction;
 
-            size_t startAltitude = 0;
+            inline const int getX() { return _x; }
+            inline const int getY() { return _y; }
+            inline const HorizonCrawlerDirection getDirection() { return _direction; }
+
+            inline const int moveX(const HorizonCrawlerDirection& p_direction) {
+                switch (p_direction) {
+                    case Left:
+                        return _x - 1;
+                    case Right:
+                        return _x + 1;
+                    case Up:
+                    case Down:
+                    case EndPlayfield:
+                        return _x;
+                }
+            }
+
+            inline const int moveY(const HorizonCrawlerDirection& p_direction) {
+                switch (p_direction) {
+                    case Up:
+                        return _y - 1;
+                    case Down:
+                        return _y + 1;
+                    case Left:
+                    case Right:
+                    case EndPlayfield:
+                        return _y;
+                }
+            }
+
+            inline const HorizonCrawler getForward() {
+                HorizonCrawlerDirection direction = _direction;
+                return HorizonCrawler(moveX(direction), moveY(direction), direction);
+            };
+
+            inline const HorizonCrawler getRight() {
+                HorizonCrawlerDirection direction = static_cast<HorizonCrawlerDirection>((_direction + 1) % 4);
+                return HorizonCrawler(moveX(direction), moveY(direction), direction);
+            };
+
+            inline const HorizonCrawler getLeft() {
+                HorizonCrawlerDirection direction = static_cast<HorizonCrawlerDirection>((_direction + 3) % 4);
+                return HorizonCrawler(moveX(direction), moveY(direction), direction);
+            };
+
+            inline const HorizonCrawler getBack() {
+                HorizonCrawlerDirection direction = static_cast<HorizonCrawlerDirection>((_direction + 2) % 4);
+                return HorizonCrawler(moveX(direction), moveY(direction), direction);
+            };
+        };
+
+        struct Horizon {
+            /** Are we a base for comparison? */
+            bool isInit;
+            /** The successive directions we need to crawl through this horizon */
+            std::vector<HorizonCrawler> data;
 
             /** The average altitude of this horizon */
             inline float getAltitude() {
-                size_t cumulatedAltitudes = startAltitude;
-                size_t prevAltitude = startAltitude;
+                ToDo: rework altitude calculation > get the top most of each column
+                std::vector<int> columnAltitudes;
 
-                for (HorizonCrawlerDirection direction : data) {
-                    switch (direction) {
-                        case HorizonCrawlerDirection::Up:
-                            cumulatedAltitudes += prevAltitude + 1;
-                            break;
-                        case HorizonCrawlerDirection::Down:
-                            cumulatedAltitudes += prevAltitude - 1;
-                            break;
-                        case HorizonCrawlerDirection::Left:
-                        case HorizonCrawlerDirection::Right:
-                            cumulatedAltitudes += prevAltitude;
-                            break;
-                        case HorizonCrawlerDirection::EndPlayfield:
-                            break;
-                    }
+                for (HorizonCrawler crawler : data) {
+                    Fill up columnAltitudes with index as X position
+                    columnAltitudes.push_back(new altitude if X is over columnAltitudes.size())
+                    or replace columnAltitudes.at(crawler X if it's higher than previous value)
                 }
 
-                return static_cast<float>(cumulatedAltitudes) / static_cast<float>(data.size() - 1);// -1 because of "End"
+                size_t cumulatedAltitudes = 0;
+                for (size_t altitude : columnAltitudes)
+                    cumulatedAltitudes += altitude;
+
+                return static_cast<float>(cumulatedAltitudes) / static_cast<float>(data.size());
             }
 
             bool operator <(Horizon& p_other) {
-                if (p_other.data.empty()) {
+                if (p_other.isInit) {
                     // We are necessarily better than an undefined horizon
                     return true;
                 }
-                if (data.size() < p_other.data.size()) {
-                    return getAltitude() < p_other.getAltitude();
+                if (isInit) {
+                    // We are necessarily worst than a defined horizon
+                    return false;
                 }
+
+                // Look for the lowest altitude
+                if (getAltitude() > p_other.getAltitude()) {
+                    // Reverse altitude logic becase it's based on Y (where higher Y value means lower coordinates on the playfield)    
+                    return true;
+                }
+
                 return false;
             };
         };
@@ -83,6 +144,6 @@ class Bot {
         void _updateBot(const double& p_frameDeltaTime);
 
         Target _getTarget(const Blocks::TetrominoType& p_piece);
-        Horizon _getHorizon(const std::vector<std::vector<std::pair<int, float>>>& p_playfield);
+        Horizon _getHorizon(const std::vector<std::vector<std::pair<int, float>>>& p_playfield, bool p_init);
         std::vector<int> _generateInputs(const std::vector<std::vector<std::pair<int, float>>>& p_playfield, const Target& p_target, const int& p_numFrames);
 };
