@@ -149,11 +149,11 @@ Bot::Target Bot::_getTarget(const Blocks::TetrominoType& p_piece) {
                         // Get horizon
                         Horizon newHorizon = _getHorizon(testPlayfield, false);
 
-                        SDL_Log("newHorizon with %s @ %d:%d %zu altitude: %f, length: %zu", _game->getPieceTypeStr(p_piece).c_str(), pieceX, pieceY, rotation, newHorizon.getAltitude(), newHorizon.data.size());
+                        SDL_Log("newHorizon with %s @ %d:%d %zu altitude: %f, length: %zu", _game->getPieceTypeStr(p_piece).c_str(), pieceX, pieceY, rotation, newHorizon.getAvgAltitude(), newHorizon.data.size());
 
                         // Compare with previous
                         if (newHorizon < _debugHorizon) {
-                            SDL_Log("Saving better horizon than previous altitude: %f, length: %zu", _debugHorizon.getAltitude(), _debugHorizon.data.size());
+                            SDL_Log("Saving better horizon than previous altitude: %f, length: %zu", _debugHorizon.getAvgAltitude(), _debugHorizon.data.size());
                             // Save for debug
                             _debugHorizon = newHorizon;
 

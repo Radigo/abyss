@@ -97,14 +97,11 @@ class Bot {
             std::vector<HorizonCrawler> data;
 
             /** The average altitude of this horizon */
-            inline float getAltitude() {
-                //ToDo: rework altitude calculation > get the top most of each column
+            inline float getAvgAltitude() {
                 std::vector<int> columnAltitudes;
 
                 for (HorizonCrawler crawler : data) {
-                    Fill up columnAltitudes with index as X position
-                    columnAltitudes.push_back(new altitude if X is over columnAltitudes.size())
-                    or replace columnAltitudes.at(crawler X if it's higher than previous value)
+                    columnAltitudes.push_back(crawler.getY());
                 }
 
                 size_t cumulatedAltitudes = 0;
@@ -125,7 +122,7 @@ class Bot {
                 }
 
                 // Look for the lowest altitude
-                if (getAltitude() > p_other.getAltitude()) {
+                if (getAvgAltitude() > p_other.getAvgAltitude()) {
                     // Reverse altitude logic becase it's based on Y (where higher Y value means lower coordinates on the playfield)    
                     return true;
                 }

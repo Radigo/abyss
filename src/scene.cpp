@@ -112,11 +112,13 @@ void Scene::createBlocksWindow(const int p_version, const int p_startLevel, cons
 
     BlocksView* blocksView = new BlocksView(window, blocks, cellSize);
     blocksView->setPosition(10, 30);
+    // Display UI (next piece, level, score, etc.)
     BlocksDataView* blocksDataView = new BlocksDataView(window, blocks);
     blocksDataView->setPosition(dataViewX, 30);
 
     if (p_isPlayedByBot) {
         Bot* bot = new Bot(blocks);
+        // Enable debug overlay (horizon)
         /*BotDataView* botDataView = */new BotDataView(blocksView, blocks, bot, cellSize);
     }
 
