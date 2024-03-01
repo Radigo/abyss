@@ -98,7 +98,7 @@ class Bot {
 
             /** The average altitude of this horizon */
             inline float getAltitude() {
-                ToDo: rework altitude calculation > get the top most of each column
+                //ToDo: rework altitude calculation > get the top most of each column
                 std::vector<int> columnAltitudes;
 
                 for (HorizonCrawler crawler : data) {
