@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 
-#include <SDL2/SDL_log.h>
-#include <SDL2/SDL_render.h>
+#include <SDL3/SDL_log.h>
+#include <SDL3/SDL_render.h>
 
 #include "engine/displayable.hpp"
 #include "engine/types.hpp"

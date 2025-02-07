@@ -5,7 +5,7 @@
 
 #include "engine/updater.hpp"
 
-#include <SDL2/SDL_log.h>
+#include <SDL3/SDL_log.h>
 
 Updatable::Updatable(GameObject* p_parent, std::function<void(const double&)> p_onUpdateCallback) :
 GameObject(p_parent)

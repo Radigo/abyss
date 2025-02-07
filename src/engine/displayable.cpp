@@ -6,7 +6,7 @@
 #include "engine/renderer.hpp"
 #include "engine/types.hpp"
 
-#include <SDL2/SDL_log.h>
+#include <SDL3/SDL_log.h>
 
 Displayable::Displayable(GameObject* p_parent) :
 GameObject(p_parent),

@@ -1,7 +1,7 @@
 #define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3/SDL_ttf.h>
 
 #include <chrono>
 #include <iostream>
@@ -31,23 +31,18 @@ int main(int /*argc*/, char** /*argv[]*/)
         return -1;
     }
 
-    SDL_version compiled;
-    SDL_VERSION(&compiled);
-    std::ostringstream compiledVal;
-    compiledVal << "Compiled with "
-                << std::to_string(compiled.major)
-                << "." << std::to_string(compiled.minor)
-                << "." << std::to_string(compiled.patch);
-    std::cout << compiledVal.str() << std::endl;
+    const int compiled = SDL_VERSION;  /* hardcoded number from SDL headers */
+    const int linked = SDL_GetVersion();  /* reported by linked SDL library */
 
-    SDL_version linked;
-    SDL_GetVersion(&linked);
-    std::ostringstream linkedVal;
-    linkedVal << "Linked with "
-              << std::to_string(linked.major)
-              << "." << std::to_string(linked.minor)
-              << "." << std::to_string(linked.patch);
-    std::cout << linkedVal.str() << std::endl;
+    SDL_Log("We compiled against SDL version %d.%d.%d ...\n",
+        SDL_VERSIONNUM_MAJOR(compiled),
+        SDL_VERSIONNUM_MINOR(compiled),
+        SDL_VERSIONNUM_MICRO(compiled));
+
+    SDL_Log("But we are linking against SDL version %d.%d.%d.\n",
+        SDL_VERSIONNUM_MAJOR(linked),
+        SDL_VERSIONNUM_MINOR(linked),
+        SDL_VERSIONNUM_MICRO(linked));
 
     // setup environment
     Globals::APP_PATH = SDL_GetBasePath();
@@ -98,8 +93,6 @@ int main(int /*argc*/, char** /*argv[]*/)
 
     SDL_Window *window = SDL_CreateWindow(
         "OpenGL SDL",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
         Globals::WINDOW_WIDTH_INIT,
         Globals::WINDOW_HEIGHT_INIT,
         window_flags
@@ -130,7 +123,7 @@ int main(int /*argc*/, char** /*argv[]*/)
     Input input;
 
     //Initialisation de SDL_TTF 
-	if (TTF_Init() == -1) { 
+	if (TTF_Init() == false) {
 		return -1; 
 	} 
 
@@ -154,47 +147,42 @@ int main(int /*argc*/, char** /*argv[]*/)
         {
             switch (event.type)
             {
-                case SDL_QUIT:
+                case SDL_EVENT_QUIT:
                     loop = false;
                     break;
 
-                case SDL_WINDOWEVENT:
-                    switch (event.window.event)
-                    {
-                    case SDL_WINDOWEVENT_RESIZED:
-                        Globals::WINDOW_WIDTH = event.window.data1;
-                        Globals::WINDOW_HEIGHT = event.window.data2;
-                        std::cout << "[INFO] Window size: "
-                                  << Globals::WINDOW_WIDTH
-                                  << "x"
-                                  << Globals::WINDOW_HEIGHT
-                                  << std::endl;
-                        // Formerly GL window resize call
-                        Scene::sceneWidth = Globals::WINDOW_WIDTH;
-                        Scene::sceneHeight = Globals::WINDOW_HEIGHT;
-                        break;
-                    }
+                case SDL_EVENT_WINDOW_RESIZED:
+                    Globals::WINDOW_WIDTH = event.window.data1;
+                    Globals::WINDOW_HEIGHT = event.window.data2;
+                    std::cout << "[INFO] Window size: "
+                                << Globals::WINDOW_WIDTH
+                                << "x"
+                                << Globals::WINDOW_HEIGHT
+                                << std::endl;
+                    // Formerly GL window resize call
+                    Scene::sceneWidth = Globals::WINDOW_WIDTH;
+                    Scene::sceneHeight = Globals::WINDOW_HEIGHT;
                     break;
 
-                case SDL_KEYDOWN:
-                case SDL_KEYUP:
-                    switch (event.key.keysym.sym)
+                case SDL_EVENT_KEY_DOWN:
+                case SDL_EVENT_KEY_UP:
+                    switch (event.key.key)
                     {
-                    case SDLK_ESCAPE:
-                        loop = false;
-                        break;
-                    default:
-                        input.onKey(event.key);
-                        break;
+                        case SDLK_ESCAPE:
+                            loop = false;
+                            break;
+                        default:
+                            input.onKey(event.key);
+                            break;
                     }
                     break;
-                case SDL_MOUSEMOTION:
+                case SDL_EVENT_MOUSE_MOTION:
                     input.onMouseMove(event.motion);
                     break;
-                case SDL_MOUSEBUTTONDOWN:
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     input.onMouseButtonDown(event.button);
                     break;
-                case SDL_MOUSEBUTTONUP:
+                case SDL_EVENT_MOUSE_BUTTON_UP:
                     input.onMouseButtonUp(event.button);
                     break;
             }
@@ -227,7 +215,7 @@ int main(int /*argc*/, char** /*argv[]*/)
         currentTime = std::chrono::system_clock::now();
     }
 
-    SDL_GL_DeleteContext(gl_context);
+    SDL_GL_DestroyContext(gl_context);
     SDL_DestroyWindow(window);
     SDL_Quit();
 

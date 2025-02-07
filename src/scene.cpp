@@ -13,7 +13,7 @@
 
 #include <time.h> // For rand only, try a fixed seed
 
-#include "SDL2/SDL_log.h"
+#include "SDL3/SDL_log.h"
 
 int Scene::sceneWidth = 0;
 int Scene::sceneHeight = 0;

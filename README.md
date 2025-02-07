@@ -27,4 +27,5 @@ Side window with debug info.
 4 - A lab
 
 Misc
+Make log to avoid manually including SDL everywhere
 Performance issues on PC, need profiling.

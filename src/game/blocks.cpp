@@ -8,7 +8,7 @@
 #include "engine/controllable.hpp"
 #include "engine/updatable.hpp"
 
-#include <SDL2/SDL_log.h>
+#include <SDL3/SDL_log.h>
 
 void Blocks::Tetromino::applyGravity(const int& p_gravity) {
     _gravityTick += p_gravity;

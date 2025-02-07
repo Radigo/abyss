@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <SDL2/SDL_render.h>
+#include <SDL3/SDL_render.h>
 
 #include "engine/gameobject.hpp"
 #include "engine/types.hpp"

@@ -8,7 +8,7 @@
 #include "engine/renderer.hpp"
 #include "engine/updatable.hpp"
 
-#include "SDL2/SDL_log.h"
+#include "SDL3/SDL_log.h"
 
 BlocksView::BlocksView(GameObject* p_parent, Blocks* p_game, const int& p_cellSize) :
 GameObject(p_parent),

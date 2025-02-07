@@ -4,7 +4,7 @@
 #include "engine/updatable.hpp"
 #include "game/blocks.hpp"
 
-#include <SDL2/SDL_log.h>
+#include <SDL3/SDL_log.h>
 
 Bot::Bot(Blocks* p_game) :
 _game(p_game),

@@ -9,7 +9,7 @@
 #include "engine/renderer.hpp"
 #include "engine/updatable.hpp"
 
-#include "SDL2/SDL_log.h"
+#include "SDL3/SDL_log.h"
 
 BotDataView::BotDataView(GameObject* p_parent, Blocks* p_game, Bot* p_bot, int p_cellSize) :
 GameObject(p_parent),

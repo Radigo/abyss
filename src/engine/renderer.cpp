@@ -1,9 +1,9 @@
 #include "renderer.hpp"
 
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_log.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_log.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3/SDL_ttf.h>
 
 #include <string>
 #include <vector>
@@ -16,25 +16,7 @@ SDL_Renderer* Renderer::_renderer = nullptr;
 std::vector<Displayable*> Renderer::_displayList;
 
 bool Renderer::init(SDL_Window* p_window) {
-    _renderer = SDL_CreateRenderer(p_window, -1, SDL_RENDERER_ACCELERATED);
-
-    SDL_RendererInfo infoRenderer;
-    SDL_GetRendererInfo(_renderer, &infoRenderer);
-
-    if (infoRenderer.flags & SDL_RENDERER_ACCELERATED)
-    {
-        SDL_Log("Accelerated render available");
-    }
-
-    if (infoRenderer.flags & SDL_RENDERER_SOFTWARE)
-    {
-        SDL_Log("Software render available");
-    }
-
-    if (infoRenderer.flags & SDL_RENDERER_TARGETTEXTURE)
-    {
-        SDL_Log("Texture render available");
-    }
+    _renderer = SDL_CreateRenderer(p_window, NULL);
 
     SDL_SetRenderDrawBlendMode(_renderer, SDL_BLENDMODE_BLEND);
 
@@ -52,12 +34,12 @@ void Renderer::update(const double&) {
 
         for (Displayable::DrawablePoint point : displayable->getDrawablePoints()) {
             SDL_SetRenderDrawColor(_renderer, point.color.r, point.color.g, point.color.b, point.color.a);
-            SDL_RenderDrawPoint(_renderer, drawableX + point.point.x, drawableY + point.point.y);
+            SDL_RenderPoint(_renderer, drawableX + point.point.x, drawableY + point.point.y);
         }
 
         for (Displayable::DrawableLine line : displayable->getDrawableLines()) {
             SDL_SetRenderDrawColor(_renderer, line.color.r, line.color.g, line.color.b, line.color.a);
-            SDL_RenderDrawLine(_renderer, drawableX + line.line.x1, drawableY + line.line.y1, drawableX + line.line.x2, drawableY + line.line.y2);
+            SDL_RenderLine(_renderer, drawableX + line.line.x1, drawableY + line.line.y1, drawableX + line.line.x2, drawableY + line.line.y2);
         }
 
         for (Displayable::DrawableRectangle rect : displayable->getDrawableRectangles()) {
@@ -67,12 +49,12 @@ void Renderer::update(const double&) {
             SDL_RenderFillRect(_renderer, &sdlRect);
 
             SDL_SetRenderDrawColor(_renderer, rect.outColor.r, rect.outColor.g, rect.outColor.b, rect.outColor.a);
-            SDL_RenderDrawRect(_renderer, &sdlRect);
+            SDL_RenderRect(_renderer, &sdlRect);
         }
 
         for (Displayable::DisplayableTexture texture : displayable->getTextures()) {
             SDL_Rect dst = {drawableX, drawableY, texture.initWidth, texture.initHeight};
-            SDL_RenderCopy(_renderer, texture.texture, NULL, &dst);
+            SDL_RenderTexture(_renderer, texture.texture, NULL, &dst);
         }
     }
 
@@ -89,7 +71,7 @@ Displayable::DisplayableTexture Renderer::createDisplayableTexture(const std::st
 
     Displayable::DisplayableTexture texture = Displayable::DisplayableTexture(SDL_CreateTextureFromSurface(_renderer, surface), surface->w, surface->h);
     
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
 
     return texture;
 }
@@ -114,7 +96,7 @@ Displayable::DisplayableTexture Renderer::createDisplayableText(const std::strin
 	
     Displayable::DisplayableTexture texture = Displayable::DisplayableTexture(SDL_CreateTextureFromSurface(_renderer, surface), surface->w, surface->h);
     
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
 	TTF_CloseFont(font);
 
     return texture;

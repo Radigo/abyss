@@ -1,7 +1,7 @@
 #include "input.hpp"
 
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_log.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_log.h>
 
 #include <vector>
 
@@ -49,30 +49,30 @@ void Input::onKey(SDL_KeyboardEvent p_event) {
         if (i >= _controllableList.size())
             return;
         Controllable* controllable = _controllableList.at(i);
-        switch (p_event.keysym.sym) {
+        switch (p_event.key) {
             case SDLK_UP:
-                controllable->onUp(p_event.type == SDL_KEYDOWN);
+                controllable->onUp(p_event.type == SDL_EVENT_KEY_DOWN);
                 break;
             case SDLK_DOWN:
-                controllable->onDown(p_event.type == SDL_KEYDOWN);
+                controllable->onDown(p_event.type == SDL_EVENT_KEY_DOWN);
                 break;
             case SDLK_LEFT:
-                controllable->onLeft(p_event.type == SDL_KEYDOWN);
+                controllable->onLeft(p_event.type == SDL_EVENT_KEY_DOWN);
                 break;
             case SDLK_RIGHT:
-                controllable->onRight(p_event.type == SDL_KEYDOWN);
+                controllable->onRight(p_event.type == SDL_EVENT_KEY_DOWN);
                 break;
-            case SDLK_w:
-                controllable->onButtonA(p_event.type == SDL_KEYDOWN);
+            case SDLK_W:
+                controllable->onButtonA(p_event.type == SDL_EVENT_KEY_DOWN);
                 break;
-            case SDLK_x:
-                controllable->onButtonB(p_event.type == SDL_KEYDOWN);
+            case SDLK_X:
+                controllable->onButtonB(p_event.type == SDL_EVENT_KEY_DOWN);
                 break;
-            case SDLK_c:
-                controllable->onButtonC(p_event.type == SDL_KEYDOWN);
+            case SDLK_C:
+                controllable->onButtonC(p_event.type == SDL_EVENT_KEY_DOWN);
                 break;
             case SDLK_RETURN:
-                controllable->onButtonStart(p_event.type == SDL_KEYDOWN);
+                controllable->onButtonStart(p_event.type == SDL_EVENT_KEY_DOWN);
                 break;
         }
     }
